@@ -24,7 +24,6 @@
 - **UI Feedback:** Sonner
 - **Camera:** 브라우저 `getUserMedia` API
 - **Linting & Formatting:** ESLint, Prettier
-- **Git Hooks:** Husky, lint-staged
 
 ## 🏃 빠른 시작
 
@@ -52,8 +51,6 @@ npm run lint
 npm run preview
 ```
 
-Husky는 `npm install` 시 `prepare` 스크립트를 통해 자동 설정됩니다.
-
 ## 🔐 환경변수
 
 루트의 `.env.example`을 참고해 `.env.local`에 환경별 값을 설정합니다.
@@ -79,7 +76,6 @@ VS Code 사용 시 다음 확장 프로그램 설치를 권장합니다.
 
 - `.prettierrc`: 코드 포맷 규칙
 - `eslint.config.js`: 코드 품질 및 React Hooks 규칙
-- `lint-staged.config.mjs`: 커밋 전 검사 대상과 명령
 
 ## 📜 프로젝트 규약
 
