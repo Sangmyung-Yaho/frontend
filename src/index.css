@@ -1,6 +1,84 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import 'tailwindcss';
 
-body {
-  margin: 0;
-  min-width: 320px;
+@theme {
+  --font-sans: Pretendard, sans-serif;
+
+  --color-main-50: #eff8e6;
+  --color-main-100: #dceecc;
+  --color-main-200: #b7dd9c;
+  --color-main-300: #92cc6d;
+  --color-main-400: #79bd44;
+  --color-main-500: #5dab22;
+  --color-main-600: #4c8f1d;
+  --color-main-700: #3e7a17;
+  --color-main-800: #2f5f12;
+
+  --color-gray-50: #e8e8e8;
+  --color-gray-100: #d0d0d0;
+  --color-gray-200: #686868;
+  --color-gray-300: #5e5e5e;
+
+  --color-status-yellow: #f7e600;
+  --color-danger: #e53e3e;
+  --color-danger-light: #fcecec;
+  --color-danger-muted: #f7c3c3;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef0da;
+
+  --color-text-primary: #242424;
+  --color-text-secondary: #686868;
+  --color-background: #f3f3f3;
+  --color-card: #fbfbfb;
+
+  --text-display: 32px;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+  --text-title-1: 24px;
+  --text-title-1--line-height: 1;
+  --text-title-1--font-weight: 700;
+  --text-title-2: 20px;
+  --text-title-2--line-height: 1;
+  --text-title-2--font-weight: 600;
+  --text-title-3: 18px;
+  --text-title-3--line-height: 1;
+  --text-title-3--font-weight: 600;
+  --text-headline: 18px;
+  --text-headline--line-height: 1;
+  --text-headline--font-weight: 600;
+  --text-body: 16px;
+  --text-body--line-height: 1;
+  --text-body--font-weight: 400;
+  --text-body-small: 14px;
+  --text-body-small--line-height: 1;
+  --text-body-small--font-weight: 400;
+  --text-caption-3: 14px;
+  --text-caption-3--line-height: 1;
+  --text-caption-3--font-weight: 600;
+  --text-caption: 12px;
+  --text-caption--line-height: 1;
+  --text-caption--font-weight: 400;
+  --text-caption-2: 12px;
+  --text-caption-2--line-height: 1;
+  --text-caption-2--font-weight: 500;
+  --text-sub: 8px;
+  --text-sub--line-height: 1;
+  --text-sub--font-weight: 400;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: var(--text-body--line-height);
+    letter-spacing: 0;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
 }
