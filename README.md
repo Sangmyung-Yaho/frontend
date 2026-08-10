@@ -151,24 +151,6 @@ src/
 - 타입과 인터페이스: `PascalCase` (예: `User`, `SkinRecord`)
 - 상수: `UPPER_SNAKE_CASE` (예: `MAX_IMAGE_SIZE`)
 
-## 🔒 Git Hooks
-
-Husky와 lint-staged를 사용하여 커밋 전에 변경된 코드를 자동 검사합니다.
-
-`git commit` 실행 시:
-
-1. 변경된 TypeScript 파일에 ESLint 자동 수정을 적용합니다.
-2. 변경된 파일에 Prettier 포맷팅을 적용합니다.
-3. 해결되지 않은 오류가 있으면 커밋을 중단합니다.
-
-커밋이 실패하면 오류를 수정한 뒤 다시 스테이징하고 커밋합니다.
-
-```bash
-git add .
-git commit -m "feat: 기능 설명"
-```
-
-처음 clone한 뒤 `npm install`을 실행하면 Husky가 자동 설치됩니다. 커밋 전 자동 검사는 코드 품질 유지를 위한 필수 과정입니다.
 
 ## 필요할 때 추가 검토
 
