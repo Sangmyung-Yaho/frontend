@@ -67,6 +67,11 @@
 }
 
 @layer base {
+  html {
+    background: var(--color-background);
+    color-scheme: light;
+  }
+
   body {
     margin: 0;
     background: var(--color-background);
@@ -80,5 +85,6 @@
 
   #root {
     min-height: 100vh;
+    min-height: 100dvh;
   }
 }

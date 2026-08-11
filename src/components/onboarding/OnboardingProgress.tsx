@@ -11,7 +11,7 @@ function OnboardingProgress({ currentStep, totalSteps = 6 }: OnboardingProgressP
 
   return (
     <div
-      className="flex h-[41px] w-full flex-col gap-2 px-4 pb-4"
+      className="flex w-[393px] max-w-full shrink-0 flex-col gap-2 px-4 py-2"
       aria-label={`온보딩 ${currentStep}/${totalSteps} 단계`}
     >
       <span className="text-[10.5px] font-bold tracking-[0.525px] text-main-500">
