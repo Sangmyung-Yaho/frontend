@@ -4,11 +4,12 @@ import type { InputHTMLAttributes } from 'react';
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   suffix?: string;
   errorMessage?: string;
+  isValid?: boolean;
   wrapperClassName?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className = '', wrapperClassName = '', suffix, errorMessage, id, ...props },
+  { className = '', wrapperClassName = '', suffix, errorMessage, isValid = false, id, ...props },
   ref,
 ) {
   const generatedId = useId();
@@ -16,7 +17,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const errorId = errorMessage ? `${inputId}-error` : undefined;
   const ringClassName = errorMessage
     ? 'ring-danger focus-within:ring-danger'
-    : 'ring-gray-100 focus-within:ring-main-500';
+    : isValid
+      ? 'ring-main-500 focus-within:ring-main-500'
+      : 'ring-gray-100 focus-within:ring-main-500';
 
   return (
     <div className={`flex w-full flex-col gap-1 ${wrapperClassName}`}>
