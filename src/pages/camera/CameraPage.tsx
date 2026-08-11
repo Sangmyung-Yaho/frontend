@@ -7,6 +7,7 @@ import cameraSwitchIcon from '../../assets/icons/camera-switch.svg';
 import { BackButton } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
+import { readImageFile } from '../../utils/imageFile';
 import { getFaceLandmarker } from './faceLandmarker';
 import { evaluateFacePosition } from './faceValidation';
 
@@ -201,6 +202,7 @@ function CameraPage() {
         const errorName = error instanceof DOMException ? error.name : '';
         if (errorName === 'NotAllowedError' || errorName === 'SecurityError') {
           setCameraStatus('permission-denied');
+          navigate('/camera/permission', { replace: true });
         } else if (errorName === 'NotFoundError' || !navigator.mediaDevices) {
           setCameraStatus('unavailable');
         } else {
@@ -214,7 +216,7 @@ function CameraPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [facingMode, selectedDeviceId, stopCamera]);
+  }, [facingMode, navigate, selectedDeviceId, stopCamera]);
 
   useEffect(
     () => () => {
@@ -238,7 +240,7 @@ function CameraPage() {
       window.clearTimeout(navigationTimeoutRef.current);
     }
     navigationTimeoutRef.current = window.setTimeout(
-      () => navigate('/onboarding?step=5'),
+      () => navigate('/analysis/loading'),
       CAPTURE_PREVIEW_MS,
     );
   };
@@ -264,13 +266,11 @@ function CameraPage() {
     }, 'image/jpeg', 0.92);
   };
 
-  const handleGalleryImage = (file: File | undefined) => {
+  const handleGalleryImage = async (file: File | undefined) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.addEventListener('load', () => {
-      if (typeof reader.result === 'string') showResultAndContinue(reader.result, file);
-    });
-    reader.readAsDataURL(file);
+
+    const previewUrl = await readImageFile(file);
+    showResultAndContinue(previewUrl, file);
   };
 
   const handleSwitchCamera = async () => {
@@ -402,7 +402,7 @@ function CameraPage() {
           className="sr-only"
           aria-hidden="true"
           tabIndex={-1}
-          onChange={(event) => handleGalleryImage(event.target.files?.[0])}
+          onChange={(event) => void handleGalleryImage(event.target.files?.[0])}
         />
 
         <button

@@ -9,3 +9,4 @@ export type { RadioProps } from './toggle/Radio';
 export { default as ToggleSwitch } from './toggle/ToggleSwitch';
 export type { ToggleSwitchProps } from './toggle/ToggleSwitch';
 export { default as Input } from './Input';
+export { default as LoadingIndicator } from './LoadingIndicator';

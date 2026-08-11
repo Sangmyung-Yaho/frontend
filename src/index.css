@@ -28,8 +28,14 @@
 
   --color-text-primary: #242424;
   --color-text-secondary: #686868;
+  --color-text-section: #111827;
+  --color-text-analysis: #2e2b26;
+  --color-text-analysis-muted: #6e7268;
   --color-background: #f3f3f3;
   --color-card: #fbfbfb;
+  --color-gallery-light: #f3f4f6;
+  --color-gallery-dark: #eceef1;
+  --color-gallery-placeholder: #dfe3e8;
 
   --text-display: 32px;
   --text-display--line-height: 1.2;
