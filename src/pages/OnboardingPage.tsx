@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import arrowLeftIcon from '../assets/icons/arrow-left.svg';
 import guideAccessoriesIcon from '../assets/onboarding/guide-accessories.svg';
 import guideFaceIcon from '../assets/onboarding/guide-face.svg';
@@ -11,7 +12,9 @@ import skinOilyIcon from '../assets/onboarding/skin-oily.svg';
 import skinSensitiveIcon from '../assets/onboarding/skin-sensitive.svg';
 import { Button, Checkbox, Input, Radio } from '../components/common';
 import OnboardingProgress from '../components/onboarding/OnboardingProgress';
+import { THEME_COLORS, useThemeColor } from '../hooks/useThemeColor';
 import { BackHeader } from '../layouts';
+import { preloadFaceLandmarker } from './camera/faceLandmarker';
 
 const TOTAL_STEPS = 6;
 const HEIGHT_RANGE = { min: 100, max: 250 };
@@ -85,7 +88,16 @@ function AgreementLabel({
 }
 
 function OnboardingPage() {
-  const [step, setStep] = useState(1);
+  useThemeColor(THEME_COLORS.onboarding);
+
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedStep = Number(searchParams.get('step'));
+  const [step, setStep] = useState(
+    Number.isInteger(requestedStep) && requestedStep >= 1 && requestedStep <= TOTAL_STEPS
+      ? requestedStep
+      : 1,
+  );
   const [agreements, setAgreements] = useState<Record<AgreementKey, boolean>>({
     terms: false,
     privacy: false,
@@ -98,6 +110,10 @@ function OnboardingPage() {
   const [photoConsent, setPhotoConsent] = useState(false);
   const [failureReason, setFailureReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+
+  useEffect(() => {
+    void preloadFaceLandmarker().catch(() => undefined);
+  }, []);
 
   const allAgreed = Object.values(agreements).every(Boolean);
   const requiredAgreed = requiredAgreements.every((key) => agreements[key]);
@@ -127,9 +143,19 @@ function OnboardingPage() {
   }, [customReason, failureReason, isHeightValid, isWeightValid, photoConsent, requiredAgreed, skinType, step]);
 
   const titles = ['', '약관 동의', '신체 정보 입력', '피부 타입 선택', '피부 사진 촬영', '실패 요인 확인', '바로케어 시작하기'];
-  const handleBack = () => step > 1 && setStep((current) => current - 1);
-  const handleNext = () => step < TOTAL_STEPS && setStep((current) => current + 1);
-  const handleSkip = () => step < TOTAL_STEPS && setStep((current) => current + 1);
+  const goToStep = (nextStep: number) => {
+    setStep(nextStep);
+    setSearchParams({ step: String(nextStep) }, { replace: true });
+  };
+  const handleBack = () => step > 1 && goToStep(step - 1);
+  const handleNext = () => {
+    if (step === 4) {
+      navigate('/camera');
+      return;
+    }
+    if (step < TOTAL_STEPS) goToStep(step + 1);
+  };
+  const handleSkip = () => step < TOTAL_STEPS && goToStep(step + 1);
   const toggleAgreement = (key: AgreementKey) =>
     setAgreements((current) => ({ ...current, [key]: !current[key] }));
   const toggleAllAgreements = () => {
@@ -139,7 +165,7 @@ function OnboardingPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-col bg-background">
-      <div className="h-[54px] shrink-0" aria-hidden="true" />
+      <div className="h-[env(safe-area-inset-top)] shrink-0" aria-hidden="true" />
       <div className="relative">
         <BackHeader title={titles[step]} onBack={handleBack} />
         {(step === 3 || step === 4) && (
@@ -267,7 +293,7 @@ function OnboardingPage() {
                 지표를 판정하는 기준선을 타입에 맞게 보정해요.
               </p>
             </div>
-            <div className="relative left-1/2 grid w-[362px] -translate-x-1/2 grid-cols-[repeat(2,173px)] gap-x-4 gap-y-2">
+            <div className="relative left-1/2 grid w-[362px] max-w-[calc(100vw-31px)] -translate-x-1/2 grid-cols-2 gap-x-4 gap-y-2">
               {skinOptions.map((option) => {
                 const selected = skinType === option.id;
                 return (
@@ -276,7 +302,7 @@ function OnboardingPage() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setSkinType(option.id)}
-                    className={`flex h-[90px] w-[173px] flex-col items-start justify-center rounded-[10px] bg-card px-5 py-6 text-left ring-1 ring-inset transition-colors ${
+                    className={`flex h-[90px] w-full min-w-0 flex-col items-start justify-center rounded-[10px] bg-card px-5 py-6 text-left ring-1 ring-inset transition-colors ${
                       selected ? 'bg-main-50 ring-main-500' : 'ring-gray-100'
                     }`}
                   >
@@ -338,7 +364,7 @@ function OnboardingPage() {
               <br />
               이유가 뭐였나요?
             </h2>
-            <div className="flex w-[361px] flex-col gap-2">
+            <div className="flex w-full max-w-[361px] flex-col gap-2">
               {failureReasons.map((reason) => (
                 <Radio
                   key={reason}
@@ -387,7 +413,7 @@ function OnboardingPage() {
         )}
 
         {step === 6 && (
-          <section className="absolute left-4 top-[calc(50%+0.5px)] flex w-[361px] -translate-y-1/2 flex-col items-center gap-14">
+          <section className="absolute inset-x-4 top-[calc(50%+0.5px)] flex -translate-y-1/2 flex-col items-center gap-14">
             <img
               src={completeIllustration}
               alt="돋보기로 피부를 살펴보는 바로케어 캐릭터"
@@ -409,7 +435,7 @@ function OnboardingPage() {
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 z-10 w-full border-0 bg-background px-4 pb-[29px] pt-2 outline-none ring-0 shadow-none focus-within:outline-none">
+      <div className="absolute bottom-0 left-0 z-10 w-full border-0 bg-background px-4 pb-[max(29px,env(safe-area-inset-bottom))] pt-2 outline-none ring-0 shadow-none focus-within:outline-none">
         <Button
           disabled={!canContinue}
           onClick={handleNext}

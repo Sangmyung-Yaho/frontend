@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { AppLayout } from '../layouts';
+import CameraPage from '../pages/camera/CameraPage';
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,10 @@ export const router = createBrowserRouter([
       {
         path: '/onboarding',
         Component: App,
+      },
+      {
+        path: '/camera',
+        Component: CameraPage,
       },
     ],
   },
