@@ -11,20 +11,20 @@ export interface BottomNavigationProps {
   className?: string;
 }
 
-const items: Array<{ id: NavigationItem; label: string; icon: string }> = [
-  { id: 'home', label: '홈', icon: homeIcon },
-  { id: 'analysis', label: '분석', icon: analysisIcon },
-  { id: 'mission', label: '미션', icon: missionIcon },
-  { id: 'my', label: '마이', icon: myIcon },
+const items: Array<{ id: NavigationItem; label: string; icon: string; iconClassName: string }> = [
+  { id: 'home', label: '홈', icon: homeIcon, iconClassName: 'h-[22px] w-5' },
+  { id: 'analysis', label: '분석', icon: analysisIcon, iconClassName: 'size-5' },
+  { id: 'mission', label: '미션', icon: missionIcon, iconClassName: 'size-[22px]' },
+  { id: 'my', label: '마이', icon: myIcon, iconClassName: 'h-[23px] w-5' },
 ];
 
 function BottomNavigation({ activeItem, onChange, className = '' }: BottomNavigationProps) {
   return (
     <nav
       aria-label="하단 메뉴"
-      className={`flex w-full max-w-[393px] border-t border-gray-100 bg-white ${className}`}
+      className={`flex h-[62px] w-full max-w-[393px] items-end justify-center gap-[clamp(56px,20.36vw,80px)] border-t border-gray-100 bg-background px-4 py-2 ${className}`}
     >
-      {items.map(({ id, label, icon }) => {
+      {items.map(({ id, label, icon, iconClassName }) => {
         const isActive = activeItem === id;
 
         return (
@@ -33,11 +33,11 @@ function BottomNavigation({ activeItem, onChange, className = '' }: BottomNaviga
             type="button"
             aria-current={isActive ? 'page' : undefined}
             onClick={() => onChange?.(id)}
-            className="flex min-w-0 flex-1 flex-col items-center gap-2 py-3 text-text-primary focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-main-500"
+            className="flex w-5 shrink-0 flex-col items-center gap-2 text-text-primary focus-visible:outline-2 focus-visible:outline-main-500"
           >
             <span
               aria-hidden="true"
-              className={`h-7 w-7 ${isActive ? 'bg-main-500' : 'bg-gray-300'}`}
+              className={`${iconClassName} shrink-0 ${isActive ? 'bg-main-500' : 'bg-gray-300'}`}
               style={{
                 WebkitMaskImage: `url("${icon}")`,
                 maskImage: `url("${icon}")`,
@@ -49,7 +49,7 @@ function BottomNavigation({ activeItem, onChange, className = '' }: BottomNaviga
                 maskSize: 'contain',
               }}
             />
-            <span className="text-body-small">{label}</span>
+            <span className="whitespace-nowrap text-caption leading-[normal]">{label}</span>
           </button>
         );
       })}

@@ -1,6 +1,7 @@
-import { Navigate, createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { AppLayout } from '../layouts';
+import HomePage from '../pages/HomePage';
 import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
@@ -12,7 +13,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/onboarding" replace />,
+        Component: HomePage,
+      },
+      {
+        path: '/home',
+        Component: HomePage,
       },
       {
         path: '/onboarding',
