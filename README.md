@@ -148,6 +148,3 @@ src/
 - 상수: `UPPER_SNAKE_CASE` (예: `MAX_IMAGE_SIZE`)
 
 
-## 필요할 때 추가 검토
-
-- `react-webcam`: 카메라 구현이 복잡해질 경우
