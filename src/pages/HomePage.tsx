@@ -1,17 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import wave1 from '../../assets/home/wave-1.svg';
-import wave2 from '../../assets/home/wave-2.svg';
-import wave3 from '../../assets/home/wave-3.svg';
-import wave4 from '../../assets/home/wave-4.svg';
-import {
-  HomeCheckinCard,
-  RoutineCard,
-  SkinAnalysisSection,
-  StreakCard,
-} from '../../components/home';
-import { BottomNavigation, type NavigationItem } from '../../layouts';
-import { HOME_MOCK_DATA, isHomeViewState } from '../../mocks/home';
+import wave1 from '../assets/home/wave-1.svg';
+import wave2 from '../assets/home/wave-2.svg';
+import wave3 from '../assets/home/wave-3.svg';
+import wave4 from '../assets/home/wave-4.svg';
+import { HomeCheckinCard, RoutineCard, SkinAnalysisSection, StreakCard } from '../components/home';
+import { BottomNavigation, type NavigationItem } from '../layouts';
+import { HOME_MOCK_DATA, isHomeViewState } from '../mocks/home';
 
 const WAVE_ASSETS = [
   { src: wave4, top: 40.06 },
