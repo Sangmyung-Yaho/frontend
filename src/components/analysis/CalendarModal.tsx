@@ -65,9 +65,17 @@ function CalendarModal({ open, selectedDate, onSelect, onClose }: CalendarModalP
           type="button"
           aria-label="닫기"
           onClick={onClose}
-          className="absolute right-2 top-2 flex size-7 items-center justify-center focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-main-500"
+          className="group absolute right-2 top-2 flex size-7 items-center justify-center focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-main-500"
         >
-          <img src={calendarCloseIcon} alt="" className="shrink-0" />
+          <img src={calendarCloseIcon} alt="" className="size-3 shrink-0 group-hover:hidden" />
+          <span
+            aria-hidden="true"
+            className="hidden size-3 shrink-0 bg-main-500 group-hover:block"
+            style={{
+              WebkitMask: `url("${calendarCloseIcon}") center / contain no-repeat`,
+              mask: `url("${calendarCloseIcon}") center / contain no-repeat`,
+            }}
+          />
         </button>
 
         <div className="mb-7 mt-10 flex w-full items-center justify-between px-1">
@@ -99,7 +107,7 @@ function CalendarModal({ open, selectedDate, onSelect, onClose }: CalendarModalP
           {WEEKDAYS.map((weekday) => (
             <span
               key={weekday}
-              className="pb-7 text-center text-[10px] font-semibold uppercase leading-3 tracking-[1.5px] text-gray-100 [font-feature-settings:'liga'_off,'clig'_off]"
+              className="pb-7 text-center text-[12px] font-semibold uppercase leading-[14px] tracking-[1.5px] text-gray-100 [font-feature-settings:'liga'_off,'clig'_off]"
             >
               {weekday}
             </span>
@@ -113,16 +121,18 @@ function CalendarModal({ open, selectedDate, onSelect, onClose }: CalendarModalP
                 aria-label={format(date, 'yyyy년 M월 d일', { locale: ko })}
                 aria-pressed={selectedDate ? isSameDay(date, selectedDate) : false}
                 onClick={() => onSelect(date)}
-                className={`mx-auto mb-3 flex size-10 items-center justify-center rounded-full text-title-2 leading-normal transition-colors focus-visible:outline-2 focus-visible:outline-main-500 ${
+                className={`mx-auto mb-3 flex size-[30px] flex-col items-center justify-center gap-[10px] rounded-[29px] transition-colors focus-visible:outline-2 focus-visible:outline-danger ${
                   selectedDate && isSameDay(date, selectedDate)
-                    ? 'bg-main-500 text-white'
-                    : 'text-gray-200 hover:bg-main-50'
+                    ? 'bg-danger text-card'
+                    : 'text-gray-200 hover:bg-danger hover:text-card'
                 }`}
               >
-                {format(date, 'd')}
+                <span className="h-[17px] w-5 shrink-0 text-center text-[14px] font-medium leading-[18px] [font-feature-settings:'liga'_off,'clig'_off]">
+                  {format(date, 'd')}
+                </span>
               </button>
             ) : (
-              <span key={`empty-${index}`} aria-hidden="true" className="mb-3 size-10" />
+              <span key={`empty-${index}`} aria-hidden="true" className="mb-3 size-[30px]" />
             ),
           )}
         </div>

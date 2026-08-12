@@ -2,17 +2,24 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import emptyAnalysisIcon from '../assets/icons/emptyAnalysisIcon.svg';
 import { AnalysisSummaryCard, CalendarModal } from '../components/analysis';
-import { Button } from '../components/common';
-import StatusBadge from '../components/common/StatusBadge';
+import { Button, StatusBadge } from '../components/common';
 import { BottomNavigation, type NavigationItem } from '../layouts';
 
 import calendarIcon from '../assets/icons/calender.svg';
 import statusCircleIcon from '../assets/icons/status-circle.svg';
 
 const records = [
-  { date: '8/7', description: '수면 부족이 영향을 줬을 수 있어요.', status: 'caution' as const },
-  { date: '8/6', description: '수면 부족+스트레스가 겹친 날이에요.', status: 'danger' as const },
-  { date: '8/5', description: '전반적으로 양호한 상태예요.', status: 'safe' as const },
+  {
+    date: '2026-08-07',
+    description: '수면 부족이 영향을 줬을 수 있어요.',
+    status: 'caution' as const,
+  },
+  {
+    date: '2026-08-06',
+    description: '수면 부족+스트레스가 겹친 날이에요.',
+    status: 'danger' as const,
+  },
+  { date: '2026-08-05', description: '전반적으로 양호한 상태예요.', status: 'safe' as const },
 ];
 
 function formatToday(date: Date) {
@@ -20,6 +27,22 @@ function formatToday(date: Date) {
     month: 'long',
     day: 'numeric',
   }).format(date)}`;
+}
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatSearchDate(date: Date) {
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function formatRecordDate(date: string) {
+  const [, month, day] = date.split('-');
+  return `${Number(month)}/${Number(day)}`;
 }
 
 function AnalysisPage() {
@@ -74,6 +97,9 @@ function EmptyAnalysis({ onCheckin }: { onCheckin: () => void }) {
 function AnalysisReport() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const visibleRecords = selectedDate
+    ? records.filter((record) => record.date === formatDateKey(selectedDate))
+    : records;
 
   return (
     <div className="flex flex-1 flex-col px-4 pb-[calc(78px+env(safe-area-inset-bottom))] pt-[10px]">
@@ -99,10 +125,14 @@ function AnalysisReport() {
       <button
         type="button"
         onClick={() => setIsCalendarOpen(true)}
-        className="mt-6 flex h-[54px] shrink-0 items-center gap-3 rounded-[10px] border border-gray-100 bg-card px-4 text-left text-body-small text-text-secondary shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+        className={`mt-6 flex h-[54px] shrink-0 items-center gap-3 rounded-[10px] border bg-card px-4 text-left text-body-small shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+          selectedDate ? 'border-main-500 text-text-primary' : 'border-gray-100 text-text-secondary'
+        }`}
       >
         <img src={calendarIcon} alt="" className="size-[19px] shrink-0 aspect-square" />
-        <span className="font-medium">지난 기록을 날짜로 찾아보세요.</span>
+        <span className="font-medium">
+          {selectedDate ? formatSearchDate(selectedDate) : '지난 기록을 날짜로 찾아보세요.'}
+        </span>
       </button>
 
       <div className="mb-4 mt-5 flex items-center justify-between">
@@ -111,12 +141,14 @@ function AnalysisReport() {
       </div>
 
       <ol className="space-y-[18px]">
-        {records.map((record) => (
+        {visibleRecords.map((record) => (
           <li
             key={record.date}
             className="grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-2"
           >
-            <time className="text-body-small font-medium">{record.date}</time>
+            <time dateTime={record.date} className="text-body-small font-medium">
+              {formatRecordDate(record.date)}
+            </time>
             <article className="flex h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
               <p className="text-body-small font-semibold leading-5">{record.description}</p>
               <StatusBadge status={record.status} className="shrink-0" />
@@ -124,6 +156,12 @@ function AnalysisReport() {
           </li>
         ))}
       </ol>
+
+      {selectedDate && visibleRecords.length === 0 && (
+        <p className="py-8 text-center text-body-small text-text-secondary">
+          선택한 날짜의 기록이 없어요.
+        </p>
+      )}
 
       <p className="mt-auto pt-8 text-caption leading-4 text-text-secondary">
         이 결과는 참고용 정보이며 의료적 진단이 아니에요.
