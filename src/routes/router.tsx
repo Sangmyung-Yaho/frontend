@@ -6,6 +6,7 @@ import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
 import CameraPermissionPage from '../pages/exception/CameraPermissionPage';
+import AnalysisPage from '../pages/AnalysisPage';
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: '/camera/permission',
         Component: CameraPermissionPage,
+      },
+      {
+        path: '/analysis',
+        Component: AnalysisPage,
       },
       {
         path: '/analysis/loading',

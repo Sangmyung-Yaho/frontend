@@ -10,3 +10,5 @@ export { default as ToggleSwitch } from './toggle/ToggleSwitch';
 export type { ToggleSwitchProps } from './toggle/ToggleSwitch';
 export { default as Input } from './Input';
 export { default as LoadingIndicator } from './LoadingIndicator';
+export { default as StatusBadge } from './StatusBadge';
+export type { StatusBadgeProps } from './StatusBadge';
