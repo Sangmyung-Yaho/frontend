@@ -1,7 +1,7 @@
-import OnboardingPage from './pages/OnboardingPage';
+import LandingPage from './pages/LandingPage';
 
 function App() {
-  return <OnboardingPage />;
+  return <LandingPage />;
 }
 
 export default App;
