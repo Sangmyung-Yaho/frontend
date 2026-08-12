@@ -6,3 +6,5 @@ export { default as Radio } from './toggle/Radio';
 export type { RadioProps } from './toggle/Radio';
 export { default as ToggleSwitch } from './toggle/ToggleSwitch';
 export type { ToggleSwitchProps } from './toggle/ToggleSwitch';
+export { default as LogoCard } from './LogoCard';
+export type { LogoCardProps } from './LogoCard';
