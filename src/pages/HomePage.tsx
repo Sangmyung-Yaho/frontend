@@ -88,7 +88,9 @@ function HomePage() {
           isCheckedIn={data.isTodayCheckedIn}
           progress={data.routineProgress}
           routines={data.routines}
-          onClick={() => navigate('/mission')}
+          onClick={() =>
+            navigate(data.isTodayCheckedIn ? '/mission?state=default' : '/mission?state=empty')
+          }
         />
       </div>
 
