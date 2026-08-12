@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cameraBackIcon from '../../assets/icons/camera-back.svg';
 import cameraShutterIcon from '../../assets/icons/camera-shutter.svg';
-import cameraSwitchIcon from '../../assets/icons/camera-switch.svg';
 import { BackButton } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
@@ -15,7 +14,6 @@ const ANALYSIS_INTERVAL_MS = 120;
 const CAPTURE_PREVIEW_MS = 1200;
 const RECENT_IMAGE_KEY = 'camera-recent-image';
 
-type FacingMode = 'user' | 'environment';
 type CameraStatus = 'loading' | 'ready' | 'permission-denied' | 'unavailable' | 'error';
 
 function getInstruction(
@@ -55,8 +53,6 @@ function CameraPage() {
   const lastVideoTimeRef = useRef(-1);
   const navigationTimeoutRef = useRef<number | null>(null);
 
-  const [facingMode, setFacingMode] = useState<FacingMode>('user');
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>();
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>('loading');
   const [hasCameraFeed, setHasCameraFeed] = useState(false);
   const [hasFace, setHasFace] = useState(false);
@@ -168,9 +164,7 @@ function CameraPage() {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
-            ...(selectedDeviceId
-              ? { deviceId: { exact: selectedDeviceId } }
-              : { facingMode: { exact: facingMode } }),
+            facingMode: { ideal: 'user' },
             width: { ideal: 1280 },
             height: { ideal: 1280 },
           },
@@ -202,7 +196,7 @@ function CameraPage() {
         const errorName = error instanceof DOMException ? error.name : '';
         if (errorName === 'NotAllowedError' || errorName === 'SecurityError') {
           setCameraStatus('permission-denied');
-          navigate('/camera/permission', { replace: true });
+          navigate('/camera/reception', { replace: true });
         } else if (errorName === 'NotFoundError' || !navigator.mediaDevices) {
           setCameraStatus('unavailable');
         } else {
@@ -216,7 +210,7 @@ function CameraPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [facingMode, navigate, selectedDeviceId, stopCamera]);
+  }, [navigate, stopCamera]);
 
   useEffect(
     () => () => {
@@ -255,15 +249,17 @@ function CameraPage() {
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
     if (!context) return;
-    if (facingMode === 'user') {
-      context.translate(canvas.width, 0);
-      context.scale(-1, 1);
-    }
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const previewUrl = canvas.toDataURL('image/jpeg', 0.92);
-    canvas.toBlob((imageBlob) => {
-      if (imageBlob) showResultAndContinue(previewUrl, imageBlob);
-    }, 'image/jpeg', 0.92);
+    canvas.toBlob(
+      (imageBlob) => {
+        if (imageBlob) showResultAndContinue(previewUrl, imageBlob);
+      },
+      'image/jpeg',
+      0.92,
+    );
   };
 
   const handleGalleryImage = async (file: File | undefined) => {
@@ -271,35 +267,6 @@ function CameraPage() {
 
     const previewUrl = await readImageFile(file);
     showResultAndContinue(previewUrl, file);
-  };
-
-  const handleSwitchCamera = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return;
-
-    const targetFacingMode: FacingMode = facingMode === 'user' ? 'environment' : 'user';
-    const currentDeviceId = streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId;
-
-    try {
-      const cameras = (await navigator.mediaDevices.enumerateDevices()).filter(
-        ({ kind }) => kind === 'videoinput',
-      );
-      const targetLabelPattern =
-        targetFacingMode === 'environment'
-          ? /back|rear|environment|후면|후방/i
-          : /front|user|facetime|전면/i;
-      const targetCamera =
-        cameras.find(
-          ({ deviceId, label }) =>
-            deviceId !== currentDeviceId && targetLabelPattern.test(label),
-        ) ?? cameras.find(({ deviceId }) => deviceId !== currentDeviceId);
-
-      if (!targetCamera && cameras.length <= 1) return;
-      setSelectedDeviceId(targetCamera?.deviceId);
-      setFacingMode(targetFacingMode);
-    } catch {
-      setSelectedDeviceId(undefined);
-      setFacingMode(targetFacingMode);
-    }
   };
 
   const instruction = getInstruction(
@@ -322,9 +289,7 @@ function CameraPage() {
           autoPlay
           muted
           playsInline
-          className={`h-full w-full object-cover ${
-            facingMode === 'user' ? 'scale-x-[-1]' : ''
-          } ${capturedImage ? 'invisible' : ''}`}
+          className={`h-full w-full scale-x-[-1] object-cover ${capturedImage ? 'invisible' : ''}`}
           aria-label="전면 카메라 미리보기"
         />
         {capturedImage && (
@@ -382,15 +347,19 @@ function CameraPage() {
         </p>
       </section>
 
-      <footer className="absolute inset-x-0 bottom-0 z-20 flex h-[calc(108px+env(safe-area-inset-bottom))] items-center justify-between bg-text-primary px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
+      <footer className="absolute inset-x-0 bottom-0 z-20 flex h-[calc(108px+env(safe-area-inset-bottom))] items-center justify-center bg-text-primary px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
         <button
           type="button"
           onClick={() => galleryInputRef.current?.click()}
-          className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-card text-[9px] font-medium text-text-primary"
+          className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-card text-[9px] font-medium text-text-primary"
           aria-label="기기 갤러리에서 사진 선택"
         >
           {galleryThumbnail ? (
-            <img src={galleryThumbnail} alt="최근 선택한 사진" className="h-full w-full rounded-[10px] object-cover" />
+            <img
+              src={galleryThumbnail}
+              alt="최근 선택한 사진"
+              className="h-full w-full rounded-[10px] object-cover"
+            />
           ) : (
             '갤러리'
           )}
@@ -416,20 +385,6 @@ function CameraPage() {
             src={cameraShutterIcon}
             alt=""
             className="absolute inset-0 h-full w-full max-w-none"
-            aria-hidden="true"
-          />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void handleSwitchCamera()}
-          className="relative h-[30.012px] w-[30.023px] shrink-0"
-          aria-label="전면과 후면 카메라 전환"
-        >
-          <img
-            src={cameraSwitchIcon}
-            alt=""
-            className="absolute inset-0 h-[30.012px] w-[30.023px] max-w-none"
             aria-hidden="true"
           />
         </button>

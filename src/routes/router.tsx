@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
         Component: CameraPage,
       },
       {
-        path: '/camera/permission',
+        path: '/camera/reception',
         Component: CameraPermissionPage,
       },
       {
