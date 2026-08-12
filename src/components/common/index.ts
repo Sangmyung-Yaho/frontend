@@ -12,3 +12,7 @@ export { default as Input } from './Input';
 export { default as LoadingIndicator } from './LoadingIndicator';
 export { default as StatusBadge } from './StatusBadge';
 export type { StatusBadgeProps } from './StatusBadge';
+export { default as TrendBadge } from './TrendBadge';
+export type { TrendBadgeProps } from './TrendBadge';
+export { default as FactorBadge } from './FactorBadge';
+export type { FactorBadgeProps } from './FactorBadge';

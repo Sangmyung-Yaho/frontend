@@ -51,7 +51,7 @@ function HomePage() {
   };
 
   return (
-    <main className="relative mx-auto min-h-dvh w-full max-w-[393px] overflow-x-hidden bg-background">
+    <main className="relative overflow-x-hidden bg-background">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[191px] overflow-hidden bg-gradient-to-b from-main-100 to-background">
         {WAVE_ASSETS.map(({ src, top }) => (
           <img
@@ -64,14 +64,14 @@ function HomePage() {
         ))}
       </div>
 
-      <header className="relative z-10 mx-4 flex w-[253px] flex-col gap-2 pt-[calc(env(safe-area-inset-top)+24px)] text-main-800">
+      <header className="relative z-10 flex w-[253px] flex-col gap-2 pt-[calc(env(safe-area-inset-top)+24px)] text-main-800">
         <p className="text-caption-3 leading-[17px]">{formatToday(new Date())}</p>
         <h1 className="whitespace-nowrap text-title-1 leading-[29px]">
           {data.userName}님, 좋은 아침이에요.
         </h1>
       </header>
 
-      <div className="relative z-10 mx-4 mt-6 flex w-[calc(100%-32px)] flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]">
+      <div className="relative z-10 mt-6 flex w-full flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]">
         <HomeCheckinCard
           isCheckedIn={data.isTodayCheckedIn}
           checkinTitleLines={data.checkinTitleLines}

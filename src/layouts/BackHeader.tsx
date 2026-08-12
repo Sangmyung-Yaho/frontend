@@ -16,7 +16,7 @@ function BackHeader({
 }: BackHeaderProps) {
   return (
     <header
-      className={`flex h-[calc(56px+env(safe-area-inset-top))] w-[393px] max-w-full items-center gap-4 bg-background pb-4 pl-8 pr-4 pt-[calc(16px+env(safe-area-inset-top))] ${className}`}
+      className={`flex h-[calc(56px+env(safe-area-inset-top))] w-full items-center gap-4 bg-background pb-4 pt-[calc(16px+env(safe-area-inset-top))] ${className}`}
       {...props}
     >
       <BackButton aria-label={backLabel} onClick={onBack} />

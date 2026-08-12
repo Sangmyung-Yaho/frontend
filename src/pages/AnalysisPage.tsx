@@ -61,7 +61,7 @@ function AnalysisPage() {
   };
 
   return (
-    <main className="relative flex min-h-dvh w-full flex-col bg-background">
+    <main className="relative flex flex-col bg-background">
       {isEmpty ? <EmptyAnalysis onCheckin={() => navigate('/checkin')} /> : <AnalysisReport />}
 
       <BottomNavigation
@@ -75,7 +75,7 @@ function AnalysisPage() {
 
 function EmptyAnalysis({ onCheckin }: { onCheckin: () => void }) {
   return (
-    <section className="flex flex-1 flex-col items-center justify-center px-4 pb-[calc(62px+env(safe-area-inset-bottom))] pt-[10px]">
+    <section className="flex flex-1 flex-col items-center justify-center pb-[calc(62px+env(safe-area-inset-bottom))] pt-[10px]">
       <div className="flex w-full -translate-y-5 flex-col items-center">
         <div className="mb-5 flex size-[88px] shrink-0 items-center justify-center rounded-[999px] bg-main-50">
           <img src={emptyAnalysisIcon} alt="" className="shrink-0" />
@@ -95,6 +95,7 @@ function EmptyAnalysis({ onCheckin }: { onCheckin: () => void }) {
 }
 
 function AnalysisReport() {
+  const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const visibleRecords = selectedDate
@@ -102,7 +103,7 @@ function AnalysisReport() {
     : records;
 
   return (
-    <div className="flex flex-1 flex-col px-4 pb-[calc(78px+env(safe-area-inset-bottom))] pt-[10px]">
+    <div className="flex flex-1 flex-col pb-[calc(78px+env(safe-area-inset-bottom))] pt-[10px]">
       <AnalysisSummaryCard
         dateLabel={formatToday(new Date())}
         title="수면 부족이 트러블 원인일 수 있어요."
@@ -120,6 +121,7 @@ function AnalysisReport() {
             iconClassName: 'bg-warning',
           },
         ]}
+        onDetails={() => navigate('/analysis/detail')}
       />
 
       <button
