@@ -1,4 +1,5 @@
 import appLogo from '../assets/logo/app-logo.svg';
+import googleIcon from '../assets/icons/google.svg';
 import kakaoIcon from '../assets/icons/kakao.svg';
 import { LogoCard } from '../components/common';
 
@@ -39,12 +40,7 @@ function LandingPage() {
           type="button"
           className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-white px-4 text-headline text-text-primary transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
         >
-          <span
-            aria-hidden="true"
-            className="bg-[conic-gradient(from_-45deg,#4285f4_0_25%,#34a853_0_42%,#fbbc05_0_66%,#ea4335_0_83%,#4285f4_0)] bg-clip-text text-[27px] font-bold leading-none text-transparent"
-          >
-            G
-          </span>
+          <img src={googleIcon} alt="" className="h-7 w-7 shrink-0" />
           <span>Google로 계속하기</span>
         </button>
       </section>
