@@ -6,15 +6,14 @@ import cameraShutterIcon from '../../assets/icons/camera-shutter.svg';
 import { BackButton } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
-import { readImageFile } from '../../utils/imageFile';
 import { getFaceLandmarker } from './faceLandmarker';
 import { evaluateFacePosition } from './faceValidation';
 
 const ANALYSIS_INTERVAL_MS = 120;
 const CAPTURE_PREVIEW_MS = 1200;
-const RECENT_IMAGE_KEY = 'camera-recent-image';
 
-type CameraStatus = 'loading' | 'ready' | 'permission-denied' | 'unavailable' | 'error';
+type CameraStatus =
+  'loading' | 'ready' | 'permission-denied' | 'unavailable' | 'error' | 'face-model-error';
 
 function getInstruction(
   status: CameraStatus,
@@ -28,6 +27,7 @@ function getInstruction(
   if (status === 'loading') return '카메라와 얼굴 인식을 준비하고 있어요';
   if (status === 'permission-denied') return '카메라 권한을 허용해주세요';
   if (status === 'unavailable') return '사용할 수 있는 카메라가 없어요';
+  if (status === 'face-model-error') return '얼굴 인식을 불러오지 못했어요';
   if (status === 'error') return '카메라를 불러오지 못했어요';
   if (!hasFace) return '얼굴을 원 안에 맞춰주세요';
   if (!isAligned) return '얼굴 크기와 위치를 원에 맞춰주세요';
@@ -43,7 +43,6 @@ function CameraPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const guideRef = useRef<HTMLDivElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
   const lightCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const landmarkerRef = useRef<FaceLandmarker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -60,9 +59,6 @@ function CameraPage() {
   const [isFrontFacing, setIsFrontFacing] = useState(false);
   const [hasGoodLighting, setHasGoodLighting] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [galleryThumbnail, setGalleryThumbnail] = useState<string | null>(() =>
-    sessionStorage.getItem(RECENT_IMAGE_KEY),
-  );
   const setCapture = useCameraCaptureStore((state) => state.setCapture);
 
   const isFrontConditionMet = hasFace && isAligned && isFrontFacing;
@@ -93,7 +89,7 @@ function CameraPage() {
         pixels[index] * 0.2126 + pixels[index + 1] * 0.7152 + pixels[index + 2] * 0.0722;
     }
     const averageLuminance = luminanceTotal / (pixels.length / 4);
-    return averageLuminance >= 55 && averageLuminance <= 235;
+    return averageLuminance >= 30 && averageLuminance <= 250;
   }, []);
 
   const analyzeFrame = useCallback(
@@ -160,7 +156,11 @@ function CameraPage() {
       setHasGoodLighting(false);
 
       try {
-        const landmarkerPromise = getFaceLandmarker();
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setCameraStatus('unavailable');
+          return;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
@@ -181,14 +181,16 @@ function CameraPage() {
           await videoRef.current.play();
         }
         setHasCameraFeed(true);
+        setCameraStatus('ready');
 
-        landmarkerRef.current = await landmarkerPromise;
-
-        if (!cancelled) {
-          setCameraStatus('ready');
+        try {
+          landmarkerRef.current = await getFaceLandmarker();
+          if (cancelled) return;
           animationFrameRef.current = requestAnimationFrame((timestamp) =>
             analyzeFrameRef.current(timestamp),
           );
+        } catch {
+          if (!cancelled) setCameraStatus('face-model-error');
         }
       } catch (error) {
         if (cancelled) return;
@@ -223,13 +225,7 @@ function CameraPage() {
 
   const showResultAndContinue = (imageUrl: string, imageBlob: Blob) => {
     setCapturedImage(imageUrl);
-    setGalleryThumbnail(imageUrl);
     setCapture(imageBlob, imageUrl);
-    try {
-      sessionStorage.setItem(RECENT_IMAGE_KEY, imageUrl);
-    } catch {
-      // Large images can exceed browser storage; the in-memory thumbnail still works.
-    }
     if (navigationTimeoutRef.current !== null) {
       window.clearTimeout(navigationTimeoutRef.current);
     }
@@ -260,13 +256,6 @@ function CameraPage() {
       'image/jpeg',
       0.92,
     );
-  };
-
-  const handleGalleryImage = async (file: File | undefined) => {
-    if (!file) return;
-
-    const previewUrl = await readImageFile(file);
-    showResultAndContinue(previewUrl, file);
   };
 
   const instruction = getInstruction(
@@ -316,7 +305,7 @@ function CameraPage() {
           <span
             className={`flex h-[25px] min-w-[57px] items-center justify-center rounded-[14px] px-4 py-1 text-caption-3 ${
               isFrontConditionMet
-                ? 'border border-main-500 bg-card text-text-primary'
+                ? 'border-[3px] border-main-500 bg-card text-text-primary'
                 : 'bg-gray-200 text-card'
             }`}
           >
@@ -325,7 +314,7 @@ function CameraPage() {
           <span
             className={`flex h-[25px] min-w-[57px] items-center justify-center rounded-[14px] px-4 py-1 text-caption-3 ${
               hasGoodLighting
-                ? 'border border-main-500 bg-card text-text-primary'
+                ? 'border-[3px] border-main-500 bg-card text-text-primary'
                 : 'bg-gray-200 text-card'
             }`}
           >
@@ -348,32 +337,6 @@ function CameraPage() {
       </section>
 
       <footer className="absolute inset-x-0 bottom-0 z-20 flex h-[calc(108px+env(safe-area-inset-bottom))] items-center justify-center bg-text-primary px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
-        <button
-          type="button"
-          onClick={() => galleryInputRef.current?.click()}
-          className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-card text-[9px] font-medium text-text-primary"
-          aria-label="기기 갤러리에서 사진 선택"
-        >
-          {galleryThumbnail ? (
-            <img
-              src={galleryThumbnail}
-              alt="최근 선택한 사진"
-              className="h-full w-full rounded-[10px] object-cover"
-            />
-          ) : (
-            '갤러리'
-          )}
-        </button>
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          aria-hidden="true"
-          tabIndex={-1}
-          onChange={(event) => void handleGalleryImage(event.target.files?.[0])}
-        />
-
         <button
           type="button"
           onClick={capturePhoto}

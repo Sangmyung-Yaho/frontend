@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { AppLayout } from '../layouts';
 import HomePage from '../pages/HomePage';
+import OnboardingPage from '../pages/OnboardingPage';
 import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
@@ -14,7 +15,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: HomePage,
+        Component: App,
       },
       {
         path: '/home',
@@ -22,7 +23,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/onboarding',
-        Component: App,
+        Component: OnboardingPage,
       },
       {
         path: '/camera',

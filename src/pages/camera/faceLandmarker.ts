@@ -12,9 +12,9 @@ export function getFaceLandmarker() {
       const options = {
         runningMode: 'VIDEO' as const,
         numFaces: 1,
-        minFaceDetectionConfidence: 0.6,
-        minFacePresenceConfidence: 0.6,
-        minTrackingConfidence: 0.6,
+        minFaceDetectionConfidence: 0.5,
+        minFacePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       };
 
       try {
