@@ -15,16 +15,11 @@ const NOSE_TIP = 1;
 const LEFT_CHEEK = 234;
 const RIGHT_CHEEK = 454;
 const FACE_OVAL_INDICES = [
-  10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378,
-  400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21,
-  54, 103, 67, 109,
+  10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148,
+  176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
 ];
 
-function toDisplayedPoint(
-  landmark: NormalizedLandmark,
-  videoSize: Size,
-  previewSize: Size,
-): Point {
+function toDisplayedPoint(landmark: NormalizedLandmark, videoSize: Size, previewSize: Size): Point {
   const scale = Math.max(
     previewSize.width / videoSize.width,
     previewSize.height / videoSize.height,
@@ -51,9 +46,7 @@ export function evaluateFacePosition(
     return { hasFace: false, isAligned: false, isFrontFacing: false };
   }
 
-  const points = landmarks.map((landmark) =>
-    toDisplayedPoint(landmark, videoSize, previewSize),
-  );
+  const points = landmarks.map((landmark) => toDisplayedPoint(landmark, videoSize, previewSize));
   const xs = points.map(({ x }) => x);
   const ys = points.map(({ y }) => y);
   const minX = Math.min(...xs);
@@ -69,17 +62,17 @@ export function evaluateFacePosition(
 
   const widthRatio = faceWidth / guideRect.width;
   const heightRatio = faceHeight / guideRect.height;
-  const centeredX = Math.abs(faceCenterX - guideCenterX) <= guideRect.width * 0.14;
-  const centeredY = Math.abs(faceCenterY - guideCenterY) <= guideRect.height * 0.14;
+  const centeredX = Math.abs(faceCenterX - guideCenterX) <= guideRect.width * 0.22;
+  const centeredY = Math.abs(faceCenterY - guideCenterY) <= guideRect.height * 0.22;
   const sizeMatches =
-    widthRatio >= 0.44 && widthRatio <= 0.9 && heightRatio >= 0.38 && heightRatio <= 0.9;
-  const guideInset = 4;
+    widthRatio >= 0.3 && widthRatio <= 1.05 && heightRatio >= 0.28 && heightRatio <= 1.05;
+  const guideInset = -16;
   const guideRadius = guideRect.width / 2 - guideInset;
   const guideTop = guideCenterY - guideRect.height / 2 + guideInset;
   const guideBottom = guideCenterY + guideRect.height / 2 - guideInset;
   const topCapCenterY = guideTop + guideRadius;
   const bottomCapCenterY = guideBottom - guideRadius;
-  const faceFitsInsideGuide = FACE_OVAL_INDICES.every((index) => {
+  const fittingLandmarkCount = FACE_OVAL_INDICES.filter((index) => {
     const point = points[index];
     const distanceX = Math.abs(point.x - guideCenterX);
     if (distanceX > guideRadius || point.y < guideTop || point.y > guideBottom) return false;
@@ -87,7 +80,8 @@ export function evaluateFacePosition(
 
     const capCenterY = point.y < topCapCenterY ? topCapCenterY : bottomCapCenterY;
     return distanceX ** 2 + (point.y - capCenterY) ** 2 <= guideRadius ** 2;
-  });
+  }).length;
+  const faceFitsInsideGuide = fittingLandmarkCount / FACE_OVAL_INDICES.length >= 0.8;
 
   const leftEye = points[LEFT_EYE_OUTER];
   const rightEye = points[RIGHT_EYE_OUTER];
@@ -106,6 +100,6 @@ export function evaluateFacePosition(
   return {
     hasFace: true,
     isAligned: centeredX && centeredY && sizeMatches && faceFitsInsideGuide,
-    isFrontFacing: eyeAngle <= 10 && yawOffset <= 0.13,
+    isFrontFacing: eyeAngle <= 20 && yawOffset <= 0.23,
   };
 }
