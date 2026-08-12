@@ -6,6 +6,7 @@ import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
 import CameraPermissionPage from '../pages/exception/CameraPermissionPage';
+import GalleryAnalysisFailurePage from '../pages/exception/GalleryAnalysisFailurePage';
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: '/analysis/failure',
         Component: AnalysisFailurePage,
+      },
+      {
+        path: '/analysis/gallery-failure',
+        Component: GalleryAnalysisFailurePage,
       },
     ],
   },

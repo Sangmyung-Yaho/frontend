@@ -18,7 +18,7 @@ function CameraPermissionPage() {
 
     const previewUrl = await readImageFile(file);
     setCapture(file, previewUrl);
-    navigate('/analysis/loading', { replace: true });
+    navigate('/analysis/loading', { replace: true, state: { source: 'gallery' } });
   };
 
   return (

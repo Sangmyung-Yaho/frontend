@@ -1,12 +1,12 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import analysisFailedIcon from '../../assets/icons/analysis-failed.svg';
+import galleryErrorIcon from '../../assets/icons/gallery-error.svg';
 import { Button } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
 import { readImageFile } from '../../utils/imageFile';
 
-function AnalysisFailurePage() {
+function GalleryAnalysisFailurePage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ function AnalysisFailurePage() {
       <section className="absolute left-[calc(50%+0.5px)] top-[calc(50%+0.5px)] flex h-[245px] w-[368px] max-w-[calc(100%-25px)] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-between">
         <div className="flex w-full flex-col items-center">
           <div className="flex size-[88px] items-center justify-center rounded-full bg-danger-light">
-            <img src={analysisFailedIcon} alt="" className="size-[45px]" />
+            <img src={galleryErrorIcon} alt="" className="size-[45px]" />
           </div>
           <div className="flex w-full flex-col items-center gap-2">
             <h1 className="pt-4 text-center text-headline leading-[normal] text-text-analysis">
@@ -40,7 +40,7 @@ function AnalysisFailurePage() {
           </div>
         </div>
 
-        <Button onClick={() => galleryInputRef.current?.click()}>사진으로 업로드</Button>
+        <Button onClick={() => galleryInputRef.current?.click()}>갤러리에서 다시 불러오기</Button>
       </section>
 
       <input
@@ -54,4 +54,4 @@ function AnalysisFailurePage() {
   );
 }
 
-export default AnalysisFailurePage;
+export default GalleryAnalysisFailurePage;
