@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import statusCircleIcon from '../assets/icons/status-circle.svg';
-import { FactorBadge, TrendBadge } from '../components/common';
+import { CauseSection, ComparisonCard, TrendEmptyCard } from '../components/analysis';
 import { BackHeader, BottomNavigation, type NavigationItem } from '../layouts';
 
 const trendData = [
@@ -13,6 +13,7 @@ const trendData = [
 
 function AnalysisDetailPage() {
   const navigate = useNavigate();
+  const analysisCount: number = 2;
 
   const handleNavigation = (item: NavigationItem) => {
     const routeByItem: Record<NavigationItem, string> = {
@@ -29,36 +30,51 @@ function AnalysisDetailPage() {
       <BackHeader title="원인 리포트" onBack={() => navigate(-1)} />
 
       <div className="flex flex-1 flex-col gap-2 pb-[calc(70px+env(safe-area-inset-bottom))]">
-        <section className="rounded-[10px] border border-main-500 bg-main-50 p-4">
-          <FactorBadge />
-          <h1 className="mt-3 text-body-small font-semibold leading-5">
-            뚜렷하게 연결되는 요인을 찾지 못했어요.
-          </h1>
-          <p className="mt-3 text-caption leading-4 text-text-secondary">
-            피부 변화가 없다는 뜻은 아니에요. 수면 시간과 물 섭취량에 변화가 있어 참고 요인으로 함께
-            보여드려요.
-          </p>
-        </section>
+        <CauseSection />
 
         <p className="text-caption leading-4 text-text-secondary">
           오늘 체크인한 항목을 기준으로 분석했어요.
         </p>
 
-        <section className="mt-3 overflow-hidden rounded-[10px] border border-main-500 bg-main-50">
-          <h2 className="bg-main-100 px-4 py-4 text-body-small font-semibold leading-5">
-            오늘은 저번 분석 때보다 붉은기가 줄었어요.
-          </h2>
-          <div className="divide-y divide-gray-100 px-4 py-2">
-            <MetricChange label="붉은기" direction="down" />
-            <MetricChange label="트러블" direction="up" />
-          </div>
-        </section>
+        <ComparisonCard
+          className="mt-3"
+          analysisCount={analysisCount}
+          title="오늘은 저번 분석 때보다 붉은기가 줄었어요."
+          metrics={[
+            {
+              label: '붉은기',
+              direction: 'down',
+              status: 'safe',
+              detail: {
+                status: 'safe',
+                description: '지난주 평균보다 붉은기가 줄었어요. 수면 시간과 수분 섭취가 늘어난 점이 영향을 줬을 수 있어요.',
+                factors: ['수면 7.1h · 권장 +0.1h', '수분 1,900ml · 권장 +300ml'],
+                footer: '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
+              },
+            },
+            {
+              label: '트러블',
+              direction: 'up',
+              status: 'caution',
+              detail: {
+                status: 'caution',
+                description: '지난주 평균보다 트러블이 늘었어요. 이 기간 수면 시간이 줄고 수분 섭취가 낮았던 점이 영향을 주었을 수 있어요.',
+                factors: ['수면 5.4h · 권장 +1.6h', '수분 300ml · 권장 +700ml'],
+                footer: '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
+              },
+            },
+          ]}
+        />
 
-        <section className="mt-1 rounded-[10px] border border-gray-100 bg-card p-4">
-          <h2 className="text-title-3">최근 피부 지표 추이</h2>
-          <TrendChart label="붉은기" dataKey="redness" color="#E53E3E" />
-          <TrendChart label="트러블" dataKey="trouble" color="#F59E0B" />
-        </section>
+        {analysisCount === 1 ? (
+          <TrendEmptyCard className="mt-1" />
+        ) : (
+          <section className="mt-1 rounded-[10px] border border-gray-100 bg-card p-4">
+            <h2 className="text-title-3">최근 피부 지표 추이</h2>
+            <TrendChart label="붉은기" dataKey="redness" color="#E53E3E" />
+            <TrendChart label="트러블" dataKey="trouble" color="#F59E0B" />
+          </section>
+        )}
 
         <section className="mt-3">
           <h2 className="mb-3 text-title-3">오늘 이렇게 해보세요.</h2>
@@ -79,15 +95,6 @@ function AnalysisDetailPage() {
         className="fixed bottom-0 left-1/2 z-20 h-[calc(62px+env(safe-area-inset-bottom))] -translate-x-1/2 pb-[calc(8px+env(safe-area-inset-bottom))]"
       />
     </main>
-  );
-}
-
-function MetricChange({ label, direction }: { label: string; direction: 'up' | 'down' }) {
-  return (
-    <div className="flex h-11 items-center justify-between">
-      <span className="text-caption-3">{label}</span>
-      <TrendBadge trend={direction === 'down' ? 'decrease' : 'increase'} />
-    </div>
   );
 }
 
