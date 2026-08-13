@@ -1,5 +1,5 @@
-export { default as Button } from './Button/Button';
-export type { ButtonProps } from './Button/Button';
+export { default as Button } from './button/Button';
+export type { ButtonProps } from './button/Button';
 export { default as BackButton } from './BackButton';
 export type { BackButtonProps } from './BackButton';
 export { default as Checkbox } from './toggle/Checkbox';

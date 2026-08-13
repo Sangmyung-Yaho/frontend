@@ -8,10 +8,12 @@ import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
 import CameraPermissionPage from '../pages/exception/CameraPermissionPage';
 import GalleryAnalysisFailurePage from '../pages/exception/GalleryAnalysisFailurePage';
+import RouteErrorPage from '../pages/exception/RouteErrorPage';
 
 export const router = createBrowserRouter([
   {
     Component: AppLayout,
+    ErrorBoundary: RouteErrorPage,
     children: [
       {
         index: true,
