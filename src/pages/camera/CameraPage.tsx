@@ -198,7 +198,7 @@ function CameraPage() {
         const errorName = error instanceof DOMException ? error.name : '';
         if (errorName === 'NotAllowedError' || errorName === 'SecurityError') {
           setCameraStatus('permission-denied');
-          navigate('/camera/permission', { replace: true });
+          navigate('/camera/reception', { replace: true });
         } else if (errorName === 'NotFoundError' || !navigator.mediaDevices) {
           setCameraStatus('unavailable');
         } else {
