@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import AgreementModalCloseButton from './AgreementModalCloseButton';
 
 interface TermsAgreementModalProps {
   onClose: () => void;
@@ -38,31 +39,12 @@ function TermsAgreementModal({ onClose }: TermsAgreementModalProps) {
           </h2>
         </header>
 
-        <button
+        <AgreementModalCloseButton
           ref={closeButtonRef}
-          type="button"
           onClick={onClose}
           aria-label="이용 약관 창 닫기"
-          className="group absolute right-[13px] top-[13px] flex size-[10px] items-center justify-center"
-        >
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 11.5 11.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            className="text-[#686868] transition-colors group-hover:text-main-500 group-focus-visible:text-main-500"
-          >
-            <path
-              d="M0.75 10.75L5.75 5.75M5.75 5.75L10.75 0.75M5.75 5.75L0.75 0.75M5.75 5.75L10.75 10.75"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+          className="right-[13px] top-[13px]"
+        />
 
         <div className="mt-2 min-h-0 w-[333px] max-w-full flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex flex-col gap-4">

@@ -11,6 +11,9 @@ import skinDryIcon from '../assets/onboarding/skin-dry.svg';
 import skinOilyIcon from '../assets/onboarding/skin-oily.svg';
 import skinSensitiveIcon from '../assets/onboarding/skin-sensitive.svg';
 import { Button, Checkbox, Input, Radio } from '../components/common';
+import AdditionalAgreementModal, {
+  type AdditionalAgreementKind,
+} from '../components/onboarding/AdditionalAgreementModal';
 import OnboardingProgress from '../components/onboarding/OnboardingProgress';
 import TermsAgreementModal from '../components/onboarding/TermsAgreementModal';
 import { THEME_COLORS, useThemeColor } from '../hooks/useThemeColor';
@@ -28,6 +31,7 @@ const BODY_TYPE_WATER_RULES = [
 ];
 
 type AgreementKey = 'terms' | 'privacy' | 'age' | 'marketing';
+type AgreementModalKey = 'terms' | AdditionalAgreementKind;
 type SkinType = 'oily' | 'dry' | 'combination' | 'sensitive';
 
 const requiredAgreements: AgreementKey[] = ['terms', 'privacy', 'age'];
@@ -102,14 +106,6 @@ function AgreementDetailsButton({ label, onClick }: { label: string; onClick: ()
   );
 }
 
-function AgreementChevron() {
-  return (
-    <span className="flex size-6 shrink-0 items-center justify-end" aria-hidden="true">
-      <img src={arrowLeftIcon} alt="" className="h-3 w-1.5 rotate-180" />
-    </span>
-  );
-}
-
 function OnboardingPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
@@ -127,7 +123,7 @@ function OnboardingPage() {
     age: false,
     marketing: false,
   });
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [openAgreementModal, setOpenAgreementModal] = useState<AgreementModalKey | null>(null);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [skinType, setSkinType] = useState<SkinType | null>(null);
@@ -254,7 +250,10 @@ function OnboardingPage() {
                   className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
                   label={<AgreementLabel required>이용약관</AgreementLabel>}
                 />
-                <AgreementDetailsButton label="이용약관" onClick={() => setIsTermsOpen(true)} />
+                <AgreementDetailsButton
+                  label="이용약관"
+                  onClick={() => setOpenAgreementModal('terms')}
+                />
               </div>
               <div className="flex w-full items-center gap-4">
                 <Checkbox
@@ -263,7 +262,10 @@ function OnboardingPage() {
                   className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
                   label={<AgreementLabel required>개인정보 수집 · 이용</AgreementLabel>}
                 />
-                <AgreementChevron />
+                <AgreementDetailsButton
+                  label="개인정보 수집 · 이용"
+                  onClick={() => setOpenAgreementModal('privacy')}
+                />
               </div>
               <Checkbox
                 checked={agreements.age}
@@ -279,7 +281,10 @@ function OnboardingPage() {
                     className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
                     label={<AgreementLabel required={false}>마케팅 정보 수신</AgreementLabel>}
                   />
-                  <AgreementChevron />
+                  <AgreementDetailsButton
+                    label="마케팅 정보 수신"
+                    onClick={() => setOpenAgreementModal('marketing')}
+                  />
                 </div>
               </div>
             </div>
@@ -488,7 +493,15 @@ function OnboardingPage() {
           {step === 4 ? '촬영 시작하기' : step === 6 ? '시작하기' : '다음'}
         </Button>
       </div>
-      {isTermsOpen && <TermsAgreementModal onClose={() => setIsTermsOpen(false)} />}
+      {openAgreementModal === 'terms' && (
+        <TermsAgreementModal onClose={() => setOpenAgreementModal(null)} />
+      )}
+      {(openAgreementModal === 'privacy' || openAgreementModal === 'marketing') && (
+        <AdditionalAgreementModal
+          kind={openAgreementModal}
+          onClose={() => setOpenAgreementModal(null)}
+        />
+      )}
     </main>
   );
 }
