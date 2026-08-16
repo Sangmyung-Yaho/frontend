@@ -1,7 +1,7 @@
-export { default as Button } from './button/Button';
-export type { ButtonProps } from './button/Button';
-export { default as BackButton } from './button/BackButton';
-export type { BackButtonProps } from './button/BackButton';
+export { default as Button } from './Button/Button';
+export type { ButtonProps } from './Button/Button';
+export { default as BackButton } from './Button/BackButton';
+export type { BackButtonProps } from './Button/BackButton';
 export { default as Checkbox } from './toggle/Checkbox';
 export type { CheckboxProps } from './toggle/Checkbox';
 export { default as Radio } from './toggle/Radio';

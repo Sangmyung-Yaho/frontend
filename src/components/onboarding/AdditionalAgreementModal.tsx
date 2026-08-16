@@ -38,7 +38,7 @@ function PrivacyAgreementContent() {
 
           <article className="flex flex-col gap-2">
             <h3 className="text-title-3 leading-[normal] text-text-primary">
-              4. 얼굴(피부) 촬영 이미지 특별 고지
+              2. 얼굴(피부) 촬영 이미지 특별 고지
             </h3>
             <div className="text-body-small leading-[normal] text-gray-300">
               <p>· 온보딩 촬영은 선택, 일일 체크인 촬영은 리포트 생성을 위한 필수 입력</p>
