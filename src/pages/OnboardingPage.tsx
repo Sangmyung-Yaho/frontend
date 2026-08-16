@@ -190,6 +190,10 @@ function OnboardingPage() {
       navigate('/camera');
       return;
     }
+    if (step === TOTAL_STEPS) {
+      navigate('/home');
+      return;
+    }
     if (step < TOTAL_STEPS) goToStep(step + 1);
   };
   const handleSkip = () => step < TOTAL_STEPS && goToStep(step + 1);
