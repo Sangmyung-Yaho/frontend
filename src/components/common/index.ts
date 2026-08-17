@@ -11,5 +11,6 @@ export type { ToggleSwitchProps } from './toggle/ToggleSwitch';
 export { default as LogoCard } from './LogoCard';
 export type { LogoCardProps } from './LogoCard';
 export { default as Input } from './Input';
+export { default as NumberOption } from './NumberOption';
 export { default as LoadingIndicator } from './LoadingIndicator';
 export { default as StatusBadge } from './StatusBadge';
