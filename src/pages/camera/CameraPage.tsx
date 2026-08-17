@@ -1,6 +1,6 @@
 import type { FaceLandmarker, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import cameraBackIcon from '../../assets/icons/camera-back.svg';
 import cameraShutterIcon from '../../assets/icons/camera-shutter.svg';
 import { BackButton } from '../../components/common';
@@ -39,6 +39,7 @@ function getInstruction(
 function CameraPage() {
   useThemeColor(THEME_COLORS.camera);
 
+  const location = useLocation();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -198,7 +199,7 @@ function CameraPage() {
         const errorName = error instanceof DOMException ? error.name : '';
         if (errorName === 'NotAllowedError' || errorName === 'SecurityError') {
           setCameraStatus('permission-denied');
-          navigate('/camera/reception', { replace: true });
+          navigate('/camera/reception', { replace: true, state: location.state });
         } else if (errorName === 'NotFoundError' || !navigator.mediaDevices) {
           setCameraStatus('unavailable');
         } else {
@@ -212,7 +213,7 @@ function CameraPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [navigate, stopCamera]);
+  }, [location.state, navigate, stopCamera]);
 
   useEffect(
     () => () => {
@@ -230,7 +231,7 @@ function CameraPage() {
       window.clearTimeout(navigationTimeoutRef.current);
     }
     navigationTimeoutRef.current = window.setTimeout(
-      () => navigate('/analysis/loading'),
+      () => navigate('/analysis/loading', { state: location.state }),
       CAPTURE_PREVIEW_MS,
     );
   };

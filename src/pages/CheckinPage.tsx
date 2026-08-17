@@ -1,20 +1,27 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import cameraIcon from '../assets/icons/camera.svg';
 import { Button, Input, NumberOption } from '../components/common';
 import { BackHeader } from '../layouts';
+import { useCheckinStore } from '../stores/checkinStore';
 
 function CheckinPage() {
   const navigate = useNavigate();
-  const [sleepHours, setSleepHours] = useState(5.5);
-  const [stress, setStress] = useState<number | null>(null);
-  const [water, setWater] = useState('');
+  const sleepHours = useCheckinStore((state) => state.sleepHours);
+  const stress = useCheckinStore((state) => state.stress);
+  const water = useCheckinStore((state) => state.water);
+  const isPhotoComplete = useCheckinStore((state) => state.isPhotoComplete);
+  const setSleepHours = useCheckinStore((state) => state.setSleepHours);
+  const setStress = useCheckinStore((state) => state.setStress);
+  const setWater = useCheckinStore((state) => state.setWater);
+  const startPhotoAnalysis = useCheckinStore((state) => state.startPhotoAnalysis);
 
-  const canAnalyze = stress !== null && water.trim().length > 0;
+  const canAnalyze = stress !== null && water.trim().length > 0 && isPhotoComplete;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canAnalyze) return;
-    navigate('/camera');
+    navigate('/home?state=completed');
   };
 
   return (
@@ -75,6 +82,7 @@ function CheckinPage() {
             onChange={(event) => setWater(event.target.value.replace(/\D/g, ''))}
             inputMode="numeric"
             suffix="ml"
+            isValid={water.trim().length > 0}
             aria-label="물 섭취량"
           />
         </label>
@@ -83,18 +91,29 @@ function CheckinPage() {
           <h2 className="mb-2 text-caption-3 leading-normal text-text-primary">피부 촬영</h2>
           <button
             type="button"
-            onClick={() => navigate('/camera')}
-            className="flex flex-col items-start gap-[10px] rounded-[10px] border border-gray-100 bg-card px-6 py-3 text-body text-text-primary transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
+            onClick={() => {
+              startPhotoAnalysis();
+              navigate('/camera', { state: { source: 'checkin' } });
+            }}
+            className={`flex flex-col items-start gap-[10px] rounded-[10px] border px-6 py-3 text-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500 ${
+              isPhotoComplete
+                ? 'border-main-500 bg-main-50 text-main-500'
+                : 'border-gray-100 bg-card text-text-primary hover:bg-gray-50'
+            }`}
           >
             <span className="flex items-center gap-2">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="size-6 shrink-0 fill-current"
-              >
-                <path d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 14.5A5.5 5.5 0 1 1 12 6a5.5 5.5 0 0 1 0 11.5Zm0-2A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
-              </svg>
-              <span>촬영하기</span>
+              {isPhotoComplete ? (
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="size-6 shrink-0 fill-none stroke-current"
+                >
+                  <path d="m5 12 4 4L19 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <img src={cameraIcon} alt="" aria-hidden="true" className="size-6 shrink-0" />
+              )}
+              <span>{isPhotoComplete ? '촬영완료' : '촬영하기'}</span>
             </span>
           </button>
         </section>
