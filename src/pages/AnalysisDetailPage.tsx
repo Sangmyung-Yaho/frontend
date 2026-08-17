@@ -123,7 +123,7 @@ function TrendChart({
       </div>
       <div className="h-[112px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+          <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 3, left: 8 }}>
             <CartesianGrid horizontal={false} stroke="#D0D0D0" strokeWidth={1} />
             <XAxis
               dataKey="date"
@@ -131,7 +131,7 @@ function TrendChart({
               tickLine={false}
               tick={<TrendXAxisTick />}
               tickMargin={12}
-              height={30}
+              height={32}
               interval={0}
               padding={{ left: 24, right: 24 }}
             />
@@ -165,7 +165,7 @@ function TrendXAxisTick({ x = 0, y = 0, payload }: TrendXAxisTickProps) {
   return (
     <text
       x={x}
-      y={y + 12}
+      y={y + 10}
       textAnchor="middle"
       fill={isToday ? '#242424' : '#686868'}
       fontFamily="Pretendard, sans-serif"
