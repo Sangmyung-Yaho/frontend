@@ -33,8 +33,18 @@ const requiredAgreements: AgreementKey[] = ['terms', 'privacy', 'age'];
 const skinOptions = [
   { id: 'oily', title: '지성', description: '유분이 자주 올라와요.', icon: skinOilyIcon },
   { id: 'dry', title: '건성', description: '당기고 각질이 있어요.', icon: skinDryIcon },
-  { id: 'combination', title: '복합성', description: 'T존만 유분이 있어요.', icon: skinCombinationIcon },
-  { id: 'sensitive', title: '민감성', description: '쉽게 붉어지고 따가워요.', icon: skinSensitiveIcon },
+  {
+    id: 'combination',
+    title: '복합성',
+    description: 'T존만 유분이 있어요.',
+    icon: skinCombinationIcon,
+  },
+  {
+    id: 'sensitive',
+    title: '민감성',
+    description: '쉽게 붉어지고 따가워요.',
+    icon: skinSensitiveIcon,
+  },
 ] satisfies Array<{ id: SkinType; title: string; description: string; icon: string }>;
 
 const failureReasons = [
@@ -46,7 +56,11 @@ const failureReasons = [
 
 const photoGuides = [
   { title: '밝은 곳에서 찍어주세요.', description: '역광은 피해주세요.', icon: guideLightIcon },
-  { title: '정면을 봐주세요.', description: '고개를 기울이면 분석이 어려워요.', icon: guideFaceIcon },
+  {
+    title: '정면을 봐주세요.',
+    description: '고개를 기울이면 분석이 어려워요.',
+    icon: guideFaceIcon,
+  },
   {
     title: '안경 · 마스크는 벗어주세요.',
     description: '가려진 부분이 있으면 분석이 어려워요.',
@@ -124,8 +138,7 @@ function OnboardingPage() {
     Number.isFinite(numericHeight) &&
     numericHeight >= HEIGHT_RANGE.min &&
     numericHeight <= HEIGHT_RANGE.max;
-  const isWeightValid =
-    weight !== '' && Number.isFinite(numericWeight) && numericWeight > 0;
+  const isWeightValid = weight !== '' && Number.isFinite(numericWeight) && numericWeight > 0;
   const heightError =
     height !== '' && !isHeightValid ? '100~250cm 사이로 입력해주세요.' : undefined;
   const waterGoal =
@@ -138,11 +151,29 @@ function OnboardingPage() {
     if (step === 2) return isHeightValid && isWeightValid;
     if (step === 3) return Boolean(skinType);
     if (step === 4) return photoConsent;
-    if (step === 5) return Boolean(failureReason && (failureReason !== 'other' || customReason.trim()));
+    if (step === 5)
+      return Boolean(failureReason && (failureReason !== 'other' || customReason.trim()));
     return true;
-  }, [customReason, failureReason, isHeightValid, isWeightValid, photoConsent, requiredAgreed, skinType, step]);
+  }, [
+    customReason,
+    failureReason,
+    isHeightValid,
+    isWeightValid,
+    photoConsent,
+    requiredAgreed,
+    skinType,
+    step,
+  ]);
 
-  const titles = ['', '약관 동의', '신체 정보 입력', '피부 타입 선택', '피부 사진 촬영', '실패 요인 확인', '바로케어 시작하기'];
+  const titles = [
+    '',
+    '약관 동의',
+    '신체 정보 입력',
+    '피부 타입 선택',
+    '피부 사진 촬영',
+    '실패 요인 확인',
+    '바로케어 시작하기',
+  ];
   const goToStep = (nextStep: number) => {
     setStep(nextStep);
     setSearchParams({ step: String(nextStep) }, { replace: true });
@@ -182,9 +213,7 @@ function OnboardingPage() {
 
       <div
         className={
-          step === 6
-            ? 'flex-1'
-            : `flex-1 px-4 pb-[107px] ${step === 4 || step === 5 ? 'pt-4' : 'pt-2'}`
+          step === 6 ? 'flex-1' : `flex-1 pb-[107px] ${step === 4 || step === 5 ? 'pt-4' : 'pt-2'}`
         }
       >
         {step === 1 && (
@@ -224,7 +253,11 @@ function OnboardingPage() {
                 checked={agreements.age}
                 onChange={() => toggleAgreement('age')}
                 className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                label={<AgreementLabel required hasDetails={false}>만 14세 이상</AgreementLabel>}
+                label={
+                  <AgreementLabel required hasDetails={false}>
+                    만 14세 이상
+                  </AgreementLabel>
+                }
               />
               <div className="border-t border-gray-100 pt-4">
                 <Checkbox
@@ -372,18 +405,14 @@ function OnboardingPage() {
                   checked={failureReason === reason}
                   onChange={() => setFailureReason(reason)}
                   className={`h-[54px] w-full gap-[10px] rounded-[10px] px-5 py-4 ring-1 ring-inset transition-colors [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 ${
-                    failureReason === reason
-                      ? 'bg-main-50 ring-main-500'
-                      : 'bg-card ring-gray-100'
+                    failureReason === reason ? 'bg-main-50 ring-main-500' : 'bg-card ring-gray-100'
                   }`}
                   label={reason}
                 />
               ))}
               <div
                 className={`flex h-[54px] items-center rounded-[10px] px-5 py-4 ring-1 ring-inset transition-colors ${
-                  failureReason === 'other'
-                    ? 'bg-main-50 ring-main-500'
-                    : 'bg-card ring-gray-100'
+                  failureReason === 'other' ? 'bg-main-50 ring-main-500' : 'bg-card ring-gray-100'
                 }`}
               >
                 <Radio

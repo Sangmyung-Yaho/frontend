@@ -7,6 +7,8 @@ import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
 import CameraPermissionPage from '../pages/exception/CameraPermissionPage';
+import AnalysisPage from '../pages/AnalysisPage';
+import AnalysisDetailPage from '../pages/AnalysisDetailPage';
 import GalleryAnalysisFailurePage from '../pages/exception/GalleryAnalysisFailurePage';
 import RouteErrorPage from '../pages/exception/RouteErrorPage';
 
@@ -34,6 +36,14 @@ export const router = createBrowserRouter([
       {
         path: '/camera/reception',
         Component: CameraPermissionPage,
+      },
+      {
+        path: '/analysis',
+        Component: AnalysisPage,
+      },
+      {
+        path: '/analysis/detail',
+        Component: AnalysisDetailPage,
       },
       {
         path: '/analysis/loading',

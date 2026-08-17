@@ -22,7 +22,7 @@ function BottomNavigation({ activeItem, onChange, className = '' }: BottomNaviga
   return (
     <nav
       aria-label="하단 메뉴"
-      className={`flex h-[62px] w-full max-w-[393px] items-end justify-center gap-[clamp(56px,20.36vw,80px)] border-t border-gray-100 bg-background px-4 py-2 ${className}`}
+      className={`flex h-[62px] w-[calc(100%-32px)] max-w-[361px] items-end justify-center gap-[clamp(48px,18vw,72px)] border-t border-gray-100 bg-background px-4 py-2 ${className}`}
     >
       {items.map(({ id, label, icon, iconClassName }) => {
         const isActive = activeItem === id;

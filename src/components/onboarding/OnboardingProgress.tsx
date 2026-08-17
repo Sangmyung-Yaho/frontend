@@ -5,13 +5,11 @@ interface OnboardingProgressProps {
 
 function OnboardingProgress({ currentStep, totalSteps = 6 }: OnboardingProgressProps) {
   const progressWidth =
-    currentStep === totalSteps
-      ? '100%'
-      : `calc(${currentStep} * (100% - 1px) / ${totalSteps})`;
+    currentStep === totalSteps ? '100%' : `calc(${currentStep} * (100% - 1px) / ${totalSteps})`;
 
   return (
     <div
-      className="flex w-[393px] max-w-full shrink-0 flex-col gap-2 px-4 py-2"
+      className="flex w-full shrink-0 flex-col gap-2 py-2"
       aria-label={`온보딩 ${currentStep}/${totalSteps} 단계`}
     >
       <span className="text-[10.5px] font-bold tracking-[0.525px] text-main-500">

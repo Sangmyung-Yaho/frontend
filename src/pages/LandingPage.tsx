@@ -6,7 +6,7 @@ import { LogoCard } from '../components/common';
 function LandingPage() {
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-[393px] flex-col overflow-hidden px-4 pb-[max(28px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
+      className="relative -mx-4 flex min-h-dvh w-[calc(100%+32px)] flex-col overflow-hidden px-4 pb-[max(95px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
       style={{
         background:
           'linear-gradient(180deg, #FFF 0%, #C0DEA9 19.71%, #A5D084 52.88%, #5DAB22 100%)',

@@ -16,13 +16,10 @@ function BackHeader({
 }: BackHeaderProps) {
   return (
     <header
-      className={`flex h-14 w-[393px] max-w-full items-center gap-4 bg-background py-4 pl-8 pr-4 ${className}`}
+      className={`flex h-[calc(56px+env(safe-area-inset-top))] w-full items-center gap-4 bg-background pb-4 pt-[calc(16px+env(safe-area-inset-top))] ${className}`}
       {...props}
     >
-      <BackButton
-        aria-label={backLabel}
-        onClick={onBack}
-      />
+      <BackButton aria-label={backLabel} onClick={onBack} />
       <h1 className="text-title-2 leading-6 text-text-primary">{title}</h1>
     </header>
   );
