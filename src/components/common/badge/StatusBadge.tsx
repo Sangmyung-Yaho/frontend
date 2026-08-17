@@ -1,4 +1,4 @@
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status?: 'caution' | 'safe' | 'danger';
   className?: string;
 }
@@ -23,7 +23,7 @@ function StatusBadge({ status = 'caution', className = '' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex h-6 w-[39px] items-center justify-center gap-[10px] whitespace-nowrap rounded-[10px] border px-2 py-1 text-caption-2 ${statusClassName} ${className}`}
+      className={`inline-flex items-center justify-center gap-[10px] whitespace-nowrap rounded-xl border px-2 py-1 text-caption-2 ${statusClassName} ${className}`}
     >
       {label}
     </span>

@@ -1,5 +1,5 @@
 import { type ButtonHTMLAttributes } from 'react';
-import arrowLeftIcon from '../../assets/icons/arrow-left.svg';
+import arrowLeftIcon from '../../../assets/icons/arrow-left.svg';
 
 export interface BackButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconSrc?: string;

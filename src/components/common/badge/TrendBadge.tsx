@@ -1,4 +1,4 @@
-interface TrendBadgeProps {
+export interface TrendBadgeProps {
   trend?: 'decrease' | 'increase' | 'steady';
   className?: string;
 }

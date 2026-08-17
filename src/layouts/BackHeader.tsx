@@ -33,7 +33,7 @@ function BackHeader({
           handleBack();
         }
       }}
-      className={`flex h-14 w-[393px] max-w-full items-center gap-4 bg-background py-4 pl-8 pr-4 ${className}`}
+      className={`flex h-[calc(56px+env(safe-area-inset-top))] w-full items-center gap-4 bg-background pb-4 pt-[calc(16px+env(safe-area-inset-top))] ${className}`}
       {...props}
     >
       <BackButton

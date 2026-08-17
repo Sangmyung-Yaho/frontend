@@ -1,7 +1,7 @@
 export { default as Button } from './button/Button';
 export type { ButtonProps } from './button/Button';
-export { default as BackButton } from './BackButton';
-export type { BackButtonProps } from './BackButton';
+export { default as BackButton } from './button/BackButton';
+export type { BackButtonProps } from './button/BackButton';
 export { default as Checkbox } from './toggle/Checkbox';
 export type { CheckboxProps } from './toggle/Checkbox';
 export { default as Radio } from './toggle/Radio';
@@ -13,4 +13,4 @@ export type { LogoCardProps } from './LogoCard';
 export { default as Input } from './Input';
 export { default as NumberOption } from './NumberOption';
 export { default as LoadingIndicator } from './LoadingIndicator';
-export { default as StatusBadge } from './StatusBadge';
+export * from './badge';
