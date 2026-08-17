@@ -1,24 +1,19 @@
 import appLogo from '../assets/logo/app-logo.svg';
+import googleIcon from '../assets/icons/google.svg';
 import kakaoIcon from '../assets/icons/kakao.svg';
+import { LogoCard } from '../components/common';
 
 function LandingPage() {
   return (
     <main
-      className="flex flex-col overflow-hidden pb-[max(28px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
+      className="relative -mx-4 flex min-h-dvh w-[calc(100%+32px)] flex-col overflow-hidden px-4 pb-[max(95px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
       style={{
         background:
           'linear-gradient(180deg, #FFF 0%, #C0DEA9 19.71%, #A5D084 52.88%, #5DAB22 100%)',
       }}
     >
       <section className="px-2 text-white">
-        <div
-          role="img"
-          aria-label="바로케어"
-          className="mb-7 h-[132px] w-[132px] shrink-0 overflow-hidden rounded-[30px] shadow-[0_3px_5px_0_rgba(0,0,0,0.25)] aspect-square"
-          style={{
-            background: `url("${appLogo}") lightgray 50% / cover no-repeat`,
-          }}
-        />
+        <LogoCard src={appLogo} alt="바로케어" className="mb-7" />
 
         <h1 className="text-[32px] font-bold leading-[1.18] tracking-[-0.02em]">
           오늘 내 피부 원인,
@@ -45,12 +40,7 @@ function LandingPage() {
           type="button"
           className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-white px-4 text-headline text-text-primary transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
         >
-          <span
-            aria-hidden="true"
-            className="bg-[conic-gradient(from_-45deg,#4285f4_0_25%,#34a853_0_42%,#fbbc05_0_66%,#ea4335_0_83%,#4285f4_0)] bg-clip-text text-[27px] font-bold leading-none text-transparent"
-          >
-            G
-          </span>
+          <img src={googleIcon} alt="" className="h-7 w-7 shrink-0" />
           <span>Google로 계속하기</span>
         </button>
       </section>

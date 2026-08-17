@@ -3,20 +3,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cameraBackIcon from '../../assets/icons/camera-back.svg';
 import cameraShutterIcon from '../../assets/icons/camera-shutter.svg';
-import cameraSwitchIcon from '../../assets/icons/camera-switch.svg';
 import { BackButton } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
-import { readImageFile } from '../../utils/imageFile';
 import { getFaceLandmarker } from './faceLandmarker';
 import { evaluateFacePosition } from './faceValidation';
 
 const ANALYSIS_INTERVAL_MS = 120;
 const CAPTURE_PREVIEW_MS = 1200;
-const RECENT_IMAGE_KEY = 'camera-recent-image';
 
-type FacingMode = 'user' | 'environment';
-type CameraStatus = 'loading' | 'ready' | 'permission-denied' | 'unavailable' | 'error';
+type CameraStatus =
+  'loading' | 'ready' | 'permission-denied' | 'unavailable' | 'error' | 'face-model-error';
 
 function getInstruction(
   status: CameraStatus,
@@ -30,6 +27,7 @@ function getInstruction(
   if (status === 'loading') return '카메라와 얼굴 인식을 준비하고 있어요';
   if (status === 'permission-denied') return '카메라 권한을 허용해주세요';
   if (status === 'unavailable') return '사용할 수 있는 카메라가 없어요';
+  if (status === 'face-model-error') return '얼굴 인식을 불러오지 못했어요';
   if (status === 'error') return '카메라를 불러오지 못했어요';
   if (!hasFace) return '얼굴을 원 안에 맞춰주세요';
   if (!isAligned) return '얼굴 크기와 위치를 원에 맞춰주세요';
@@ -45,7 +43,6 @@ function CameraPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const guideRef = useRef<HTMLDivElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
   const lightCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const landmarkerRef = useRef<FaceLandmarker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -55,8 +52,6 @@ function CameraPage() {
   const lastVideoTimeRef = useRef(-1);
   const navigationTimeoutRef = useRef<number | null>(null);
 
-  const [facingMode, setFacingMode] = useState<FacingMode>('user');
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>();
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>('loading');
   const [hasCameraFeed, setHasCameraFeed] = useState(false);
   const [hasFace, setHasFace] = useState(false);
@@ -64,9 +59,6 @@ function CameraPage() {
   const [isFrontFacing, setIsFrontFacing] = useState(false);
   const [hasGoodLighting, setHasGoodLighting] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [galleryThumbnail, setGalleryThumbnail] = useState<string | null>(() =>
-    sessionStorage.getItem(RECENT_IMAGE_KEY),
-  );
   const setCapture = useCameraCaptureStore((state) => state.setCapture);
 
   const isFrontConditionMet = hasFace && isAligned && isFrontFacing;
@@ -97,7 +89,7 @@ function CameraPage() {
         pixels[index] * 0.2126 + pixels[index + 1] * 0.7152 + pixels[index + 2] * 0.0722;
     }
     const averageLuminance = luminanceTotal / (pixels.length / 4);
-    return averageLuminance >= 55 && averageLuminance <= 235;
+    return averageLuminance >= 30 && averageLuminance <= 250;
   }, []);
 
   const analyzeFrame = useCallback(
@@ -164,13 +156,15 @@ function CameraPage() {
       setHasGoodLighting(false);
 
       try {
-        const landmarkerPromise = getFaceLandmarker();
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setCameraStatus('unavailable');
+          return;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
-            ...(selectedDeviceId
-              ? { deviceId: { exact: selectedDeviceId } }
-              : { facingMode: { exact: facingMode } }),
+            facingMode: { ideal: 'user' },
             width: { ideal: 1280 },
             height: { ideal: 1280 },
           },
@@ -187,14 +181,16 @@ function CameraPage() {
           await videoRef.current.play();
         }
         setHasCameraFeed(true);
+        setCameraStatus('ready');
 
-        landmarkerRef.current = await landmarkerPromise;
-
-        if (!cancelled) {
-          setCameraStatus('ready');
+        try {
+          landmarkerRef.current = await getFaceLandmarker();
+          if (cancelled) return;
           animationFrameRef.current = requestAnimationFrame((timestamp) =>
             analyzeFrameRef.current(timestamp),
           );
+        } catch {
+          if (!cancelled) setCameraStatus('face-model-error');
         }
       } catch (error) {
         if (cancelled) return;
@@ -202,7 +198,7 @@ function CameraPage() {
         const errorName = error instanceof DOMException ? error.name : '';
         if (errorName === 'NotAllowedError' || errorName === 'SecurityError') {
           setCameraStatus('permission-denied');
-          navigate('/camera/permission', { replace: true });
+          navigate('/camera/reception', { replace: true });
         } else if (errorName === 'NotFoundError' || !navigator.mediaDevices) {
           setCameraStatus('unavailable');
         } else {
@@ -216,7 +212,7 @@ function CameraPage() {
       cancelled = true;
       stopCamera();
     };
-  }, [facingMode, navigate, selectedDeviceId, stopCamera]);
+  }, [navigate, stopCamera]);
 
   useEffect(
     () => () => {
@@ -229,13 +225,7 @@ function CameraPage() {
 
   const showResultAndContinue = (imageUrl: string, imageBlob: Blob) => {
     setCapturedImage(imageUrl);
-    setGalleryThumbnail(imageUrl);
     setCapture(imageBlob, imageUrl);
-    try {
-      sessionStorage.setItem(RECENT_IMAGE_KEY, imageUrl);
-    } catch {
-      // Large images can exceed browser storage; the in-memory thumbnail still works.
-    }
     if (navigationTimeoutRef.current !== null) {
       window.clearTimeout(navigationTimeoutRef.current);
     }
@@ -255,51 +245,17 @@ function CameraPage() {
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
     if (!context) return;
-    if (facingMode === 'user') {
-      context.translate(canvas.width, 0);
-      context.scale(-1, 1);
-    }
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const previewUrl = canvas.toDataURL('image/jpeg', 0.92);
-    canvas.toBlob((imageBlob) => {
-      if (imageBlob) showResultAndContinue(previewUrl, imageBlob);
-    }, 'image/jpeg', 0.92);
-  };
-
-  const handleGalleryImage = async (file: File | undefined) => {
-    if (!file) return;
-
-    const previewUrl = await readImageFile(file);
-    showResultAndContinue(previewUrl, file);
-  };
-
-  const handleSwitchCamera = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return;
-
-    const targetFacingMode: FacingMode = facingMode === 'user' ? 'environment' : 'user';
-    const currentDeviceId = streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId;
-
-    try {
-      const cameras = (await navigator.mediaDevices.enumerateDevices()).filter(
-        ({ kind }) => kind === 'videoinput',
-      );
-      const targetLabelPattern =
-        targetFacingMode === 'environment'
-          ? /back|rear|environment|후면|후방/i
-          : /front|user|facetime|전면/i;
-      const targetCamera =
-        cameras.find(
-          ({ deviceId, label }) =>
-            deviceId !== currentDeviceId && targetLabelPattern.test(label),
-        ) ?? cameras.find(({ deviceId }) => deviceId !== currentDeviceId);
-
-      if (!targetCamera && cameras.length <= 1) return;
-      setSelectedDeviceId(targetCamera?.deviceId);
-      setFacingMode(targetFacingMode);
-    } catch {
-      setSelectedDeviceId(undefined);
-      setFacingMode(targetFacingMode);
-    }
+    canvas.toBlob(
+      (imageBlob) => {
+        if (imageBlob) showResultAndContinue(previewUrl, imageBlob);
+      },
+      'image/jpeg',
+      0.92,
+    );
   };
 
   const instruction = getInstruction(
@@ -322,9 +278,7 @@ function CameraPage() {
           autoPlay
           muted
           playsInline
-          className={`h-full w-full object-cover ${
-            facingMode === 'user' ? 'scale-x-[-1]' : ''
-          } ${capturedImage ? 'invisible' : ''}`}
+          className={`h-full w-full scale-x-[-1] object-cover ${capturedImage ? 'invisible' : ''}`}
           aria-label="전면 카메라 미리보기"
         />
         {capturedImage && (
@@ -351,7 +305,7 @@ function CameraPage() {
           <span
             className={`flex h-[25px] min-w-[57px] items-center justify-center rounded-[14px] px-4 py-1 text-caption-3 ${
               isFrontConditionMet
-                ? 'border border-main-500 bg-card text-text-primary'
+                ? 'border-[3px] border-main-500 bg-card text-text-primary'
                 : 'bg-gray-200 text-card'
             }`}
           >
@@ -360,7 +314,7 @@ function CameraPage() {
           <span
             className={`flex h-[25px] min-w-[57px] items-center justify-center rounded-[14px] px-4 py-1 text-caption-3 ${
               hasGoodLighting
-                ? 'border border-main-500 bg-card text-text-primary'
+                ? 'border-[3px] border-main-500 bg-card text-text-primary'
                 : 'bg-gray-200 text-card'
             }`}
           >
@@ -382,29 +336,7 @@ function CameraPage() {
         </p>
       </section>
 
-      <footer className="absolute inset-x-0 bottom-0 z-20 flex h-[calc(108px+env(safe-area-inset-bottom))] items-center justify-between bg-text-primary px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
-        <button
-          type="button"
-          onClick={() => galleryInputRef.current?.click()}
-          className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-card text-[9px] font-medium text-text-primary"
-          aria-label="기기 갤러리에서 사진 선택"
-        >
-          {galleryThumbnail ? (
-            <img src={galleryThumbnail} alt="최근 선택한 사진" className="h-full w-full rounded-[10px] object-cover" />
-          ) : (
-            '갤러리'
-          )}
-        </button>
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          aria-hidden="true"
-          tabIndex={-1}
-          onChange={(event) => void handleGalleryImage(event.target.files?.[0])}
-        />
-
+      <footer className="absolute inset-x-0 bottom-0 z-20 flex h-[calc(108px+env(safe-area-inset-bottom))] items-center justify-center bg-text-primary px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4">
         <button
           type="button"
           onClick={capturePhoto}
@@ -416,20 +348,6 @@ function CameraPage() {
             src={cameraShutterIcon}
             alt=""
             className="absolute inset-0 h-full w-full max-w-none"
-            aria-hidden="true"
-          />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void handleSwitchCamera()}
-          className="relative h-[30.012px] w-[30.023px] shrink-0"
-          aria-label="전면과 후면 카메라 전환"
-        >
-          <img
-            src={cameraSwitchIcon}
-            alt=""
-            className="absolute inset-0 h-[30.012px] w-[30.023px] max-w-none"
             aria-hidden="true"
           />
         </button>

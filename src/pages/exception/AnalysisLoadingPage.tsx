@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
-import {
-  ANALYSIS_ESTIMATED_DURATION_MS,
-  analyzeSkinPhoto,
-} from '../../services/skinAnalysis';
+import { ANALYSIS_ESTIMATED_DURATION_MS, analyzeSkinPhoto } from '../../services/skinAnalysis';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
 
 const MAX_PROGRESS_BEFORE_RESPONSE = 95;
@@ -15,8 +12,10 @@ function AnalysisLoadingPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
   const [progress, setProgress] = useState(0);
+  const isGalleryUpload = location.state?.source === 'gallery';
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +25,9 @@ function AnalysisLoadingPage() {
 
     const updateProgress = (timestamp: number) => {
       const elapsedRatio = (timestamp - startedAt) / ANALYSIS_ESTIMATED_DURATION_MS;
-      setProgress(Math.min(elapsedRatio * MAX_PROGRESS_BEFORE_RESPONSE, MAX_PROGRESS_BEFORE_RESPONSE));
+      setProgress(
+        Math.min(elapsedRatio * MAX_PROGRESS_BEFORE_RESPONSE, MAX_PROGRESS_BEFORE_RESPONSE),
+      );
 
       if (elapsedRatio >= 1) return;
       animationFrameId = window.requestAnimationFrame(updateProgress);
@@ -49,7 +50,9 @@ function AnalysisLoadingPage() {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
-        navigate('/analysis/failure', { replace: true });
+        navigate(isGalleryUpload ? '/analysis/gallery-failure' : '/analysis/failure', {
+          replace: true,
+        });
       });
 
     return () => {
@@ -57,7 +60,7 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, navigate]);
+  }, [imageBlob, isGalleryUpload, navigate]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">
@@ -75,10 +78,7 @@ function AnalysisLoadingPage() {
             aria-valuemin={0}
             aria-valuemax={100}
           >
-            <div
-              className="h-full rounded-full bg-main-500"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full rounded-full bg-main-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </section>
