@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
-import { ANALYSIS_ESTIMATED_DURATION_MS, analyzeSkinPhoto } from '../../services/skinAnalysis';
+import { setPendingOnboardingSkinImageId } from '../../services/pendingOnboardingSkinImage';
+import {
+  ANALYSIS_ESTIMATED_DURATION_MS,
+  analyzeSkinPhoto,
+  uploadSkinPhoto,
+} from '../../services/skinAnalysis';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
 import { useCheckinStore } from '../../stores/checkinStore';
 
@@ -17,9 +22,7 @@ function AnalysisLoadingPage() {
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
   const setAnalysisResult = useCameraCaptureStore((state) => state.setAnalysisResult);
   const [isCheckinPhotoAnalysis] = useState(
-    () =>
-      location.state?.source === 'checkin' ||
-      useCheckinStore.getState().isPhotoAnalysisPending,
+    () => location.state?.source === 'checkin' || useCheckinStore.getState().isPhotoAnalysisPending,
   );
   const [progress, setProgress] = useState(0);
   const isGalleryUpload =
@@ -43,16 +46,24 @@ function AnalysisLoadingPage() {
 
     animationFrameId = window.requestAnimationFrame(updateProgress);
 
-    void analyzeSkinPhoto(imageBlob)
-      .then((analysisResult) => {
+    const processSkinPhoto = async () => {
+      if (isCheckinPhotoAnalysis) {
+        const analysisResult = await analyzeSkinPhoto(imageBlob);
+        setAnalysisResult(analysisResult);
+        useCheckinStore.getState().completePhotoAnalysis();
+        return;
+      }
+
+      const { skin_image_id: skinImageId } = await uploadSkinPhoto(imageBlob);
+      setPendingOnboardingSkinImageId(skinImageId);
+    };
+
+    void processSkinPhoto()
+      .then(() => {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
-        setAnalysisResult(analysisResult);
         setProgress(100);
-        if (isCheckinPhotoAnalysis) {
-          useCheckinStore.getState().completePhotoAnalysis();
-        }
         navigationTimeoutId = window.setTimeout(
           () =>
             navigate(isCheckinPhotoAnalysis ? '/checkin' : '/onboarding?step=5', {
