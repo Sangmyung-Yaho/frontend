@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
-import { ANALYSIS_ESTIMATED_DURATION_MS, analyzeSkinPhoto } from '../../services/skinAnalysis';
+import { setPendingOnboardingSkinImageId } from '../../services/pendingOnboardingSkinImage';
+import {
+  ANALYSIS_ESTIMATED_DURATION_MS,
+  analyzeSkinPhoto,
+  uploadSkinPhoto,
+} from '../../services/skinAnalysis';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
 import { useCheckinStore } from '../../stores/checkinStore';
 
@@ -15,10 +20,9 @@ function AnalysisLoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
+  const setAnalysisResult = useCameraCaptureStore((state) => state.setAnalysisResult);
   const [isCheckinPhotoAnalysis] = useState(
-    () =>
-      location.state?.source === 'checkin' ||
-      useCheckinStore.getState().isPhotoAnalysisPending,
+    () => location.state?.source === 'checkin' || useCheckinStore.getState().isPhotoAnalysisPending,
   );
   const [progress, setProgress] = useState(0);
   const isGalleryUpload =
@@ -42,15 +46,24 @@ function AnalysisLoadingPage() {
 
     animationFrameId = window.requestAnimationFrame(updateProgress);
 
-    void analyzeSkinPhoto(imageBlob)
+    const processSkinPhoto = async () => {
+      if (isCheckinPhotoAnalysis) {
+        const analysisResult = await analyzeSkinPhoto(imageBlob);
+        setAnalysisResult(analysisResult);
+        useCheckinStore.getState().completePhotoAnalysis();
+        return;
+      }
+
+      const { skin_image_id: skinImageId } = await uploadSkinPhoto(imageBlob);
+      setPendingOnboardingSkinImageId(skinImageId);
+    };
+
+    void processSkinPhoto()
       .then(() => {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
         setProgress(100);
-        if (isCheckinPhotoAnalysis) {
-          useCheckinStore.getState().completePhotoAnalysis();
-        }
         navigationTimeoutId = window.setTimeout(
           () =>
             navigate(isCheckinPhotoAnalysis ? '/checkin' : '/onboarding?step=5', {
@@ -73,7 +86,7 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate]);
+  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate, setAnalysisResult]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">

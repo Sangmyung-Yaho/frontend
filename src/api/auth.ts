@@ -1,3 +1,5 @@
+import { clearPendingOnboardingSkinImageId } from '../services/pendingOnboardingSkinImage';
+
 export type OAuthProvider = 'google' | 'kakao';
 
 export const AUTH_TOKEN_STORAGE_KEYS = {
@@ -12,6 +14,7 @@ export function getAccessToken() {
 export function clearAuthTokens() {
   localStorage.removeItem(AUTH_TOKEN_STORAGE_KEYS.accessToken);
   localStorage.removeItem(AUTH_TOKEN_STORAGE_KEYS.refreshToken);
+  clearPendingOnboardingSkinImageId();
 }
 
 function getApiBaseUrl() {
@@ -20,7 +23,6 @@ function getApiBaseUrl() {
   if (!apiBaseUrl) {
     throw new Error('VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.');
   }
-
 
   return apiBaseUrl.replace(/\/+$/, '');
 }
