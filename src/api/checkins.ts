@@ -15,20 +15,29 @@ export interface CreateCheckinRequest {
   water_intake_ml: number;
 }
 
-export function createCheckin(checkin: CreateCheckinRequest) {
-  return apiClient.post<CheckinData>('/api/v1/checkins', checkin);
+interface ApiResponse<T> {
+  is_success: boolean;
+  message: string;
+  data: T;
 }
 
-export function getCheckinsByDateRange(startDate: string, endDate: string) {
-  return apiClient.get<CheckinData[]>('/api/v1/checkins', {
+export async function createCheckin(checkin: CreateCheckinRequest) {
+  const { data } = await apiClient.post<ApiResponse<CheckinData>>('/api/v1/checkins', checkin);
+  return data.data;
+}
+
+export async function getCheckinsByDateRange(startDate: string, endDate: string) {
+  const { data } = await apiClient.get<ApiResponse<CheckinData[]>>('/api/v1/checkins', {
     params: { startDate, endDate },
   });
+
+  return data.data;
 }
 
 export async function getTodayCheckin() {
   try {
-    const { data } = await apiClient.get<CheckinData>('/api/v1/checkins/today');
-    return data;
+    const { data } = await apiClient.get<ApiResponse<CheckinData>>('/api/v1/checkins/today');
+    return data.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       return null;

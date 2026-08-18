@@ -42,7 +42,7 @@ function CheckinPage() {
   const today = formatLocalDate(new Date());
   const { data: checkinHistory } = useQuery({
     queryKey: ['checkins', 'history', CHECKIN_HISTORY_START_DATE, today],
-    queryFn: async () => (await getCheckinsByDateRange(CHECKIN_HISTORY_START_DATE, today)).data,
+    queryFn: () => getCheckinsByDateRange(CHECKIN_HISTORY_START_DATE, today),
     staleTime: 30_000,
     retry: 1,
   });
