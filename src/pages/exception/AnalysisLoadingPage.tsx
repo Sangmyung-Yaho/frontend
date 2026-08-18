@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { requestSkinAnalysis } from '../../api/skinAnalysis';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../services/pendingOnboardingSkinImage';
 import {
   ANALYSIS_ESTIMATED_DURATION_MS,
+  analyzeUploadedSkinImage,
   analyzeSkinPhoto,
   uploadSkinPhoto,
 } from '../../services/skinAnalysis';
@@ -65,7 +65,7 @@ function AnalysisLoadingPage() {
         }
 
         const analysisResult = pendingSkinImageId
-          ? await requestSkinAnalysis(pendingSkinImageId)
+          ? await analyzeUploadedSkinImage(pendingSkinImageId)
           : await analyzeSkinPhoto(imageBlob);
 
         if (pendingSkinImageId) {
