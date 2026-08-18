@@ -4,6 +4,7 @@ import { AppLayout } from '../layouts';
 import HomePage from '../pages/HomePage';
 import CheckinPage from '../pages/CheckinPage';
 import OnboardingPage from '../pages/OnboardingPage';
+import RoutinePage from '../pages/RoutinePage';
 import CameraPage from '../pages/camera/CameraPage';
 import AnalysisFailurePage from '../pages/exception/AnalysisFailurePage';
 import AnalysisLoadingPage from '../pages/exception/AnalysisLoadingPage';
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: '/onboarding',
         Component: OnboardingPage,
+      },
+      {
+        path: '/mission',
+        Component: RoutinePage,
       },
       {
         path: '/camera',
