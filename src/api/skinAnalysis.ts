@@ -17,10 +17,52 @@ export interface SkinAnalysisResponse {
   analyzed_at: string;
 }
 
+export interface SkinAnalysisDetailResponse extends SkinAnalysisResponse {
+  is_baseline: boolean;
+  previous_skin_analysis_id: number | null;
+  redness_change_status: 'IMPROVED' | 'WORSENED' | 'UNCHANGED' | null;
+  trouble_change_status: 'IMPROVED' | 'WORSENED' | 'UNCHANGED' | null;
+}
+
+export interface SkinComparisonResponse {
+  skin_comparison_id: number | null;
+  current_skin_analysis_id: number;
+  previous_skin_analysis_id: number | null;
+  redness_change: 'INCREASED' | 'STABLE' | 'DECREASED' | null;
+  trouble_change: 'INCREASED' | 'STABLE' | 'DECREASED' | null;
+  compared_at: string | null;
+}
+
+export interface SkinAnalysisHistoryItem {
+  date: string;
+  redness_level: SkinAnalysisLevel;
+  trouble_level: SkinAnalysisLevel;
+}
+
+export interface SkinAnalysisLevelPoint {
+  redness_level: SkinAnalysisLevel;
+  trouble_level: SkinAnalysisLevel;
+}
+
+export interface SkinAnalysisHistoryResponse {
+  period_days: number;
+  latest: SkinAnalysisLevelPoint | null;
+  average: SkinAnalysisLevelPoint | null;
+  history: SkinAnalysisHistoryItem[];
+  baseline: SkinAnalysisLevelPoint | null;
+}
+
 interface ApiResponse<T> {
   is_success: boolean;
   message: string;
   data: T;
+}
+
+function unwrapApiResponse<T>(response: ApiResponse<T> | T): T {
+  if (typeof response === 'object' && response !== null && 'data' in response) {
+    return (response as ApiResponse<T>).data;
+  }
+  return response as T;
 }
 
 export async function uploadSkinImage(imageBlob: Blob) {
@@ -44,4 +86,36 @@ export async function requestSkinAnalysis(skinImageId: number) {
   );
 
   return data.data;
+}
+
+export async function getSkinAnalysisHistory(period = 28) {
+  const { data } = await apiClient.get<ApiResponse<SkinAnalysisHistoryResponse>>(
+    '/api/v1/skin-analyses/history',
+    { params: { period } },
+  );
+  return data.data;
+}
+
+export async function getSkinAnalysisDetail(skinAnalysisId: number) {
+  const { data } = await apiClient.get<
+    ApiResponse<SkinAnalysisDetailResponse> | SkinAnalysisDetailResponse
+  >(`/api/v1/skin-analyses/${skinAnalysisId}`);
+  return unwrapApiResponse(data);
+}
+
+export async function compareSkinAnalyses(
+  currentSkinAnalysisId: number,
+  previousSkinAnalysisId: number | null,
+) {
+  const { data } = await apiClient.post<
+    ApiResponse<SkinComparisonResponse> | SkinComparisonResponse
+  >(
+    '/api/v1/skin-comparisons',
+    {
+      current_skin_analysis_id: currentSkinAnalysisId,
+      previous_skin_analysis_id: previousSkinAnalysisId,
+    },
+    { timeout: 90_000 },
+  );
+  return unwrapApiResponse(data);
 }
