@@ -15,6 +15,7 @@ function AnalysisLoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
+  const setAnalysisResult = useCameraCaptureStore((state) => state.setAnalysisResult);
   const [isCheckinPhotoAnalysis] = useState(
     () =>
       location.state?.source === 'checkin' ||
@@ -43,10 +44,11 @@ function AnalysisLoadingPage() {
     animationFrameId = window.requestAnimationFrame(updateProgress);
 
     void analyzeSkinPhoto(imageBlob)
-      .then(() => {
+      .then((analysisResult) => {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
+        setAnalysisResult(analysisResult);
         setProgress(100);
         if (isCheckinPhotoAnalysis) {
           useCheckinStore.getState().completePhotoAnalysis();
@@ -73,7 +75,7 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate]);
+  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate, setAnalysisResult]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">

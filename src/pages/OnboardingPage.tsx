@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  completeOnboarding,
+  getOnboardingStatus,
+  savePhotoGuideAgreement,
+  saveRequiredAgreements,
+  saveSkinCarePauseReason,
+  updateMarketingAgreement,
+  updateOnboardingProfile,
+  type OnboardingSkinType,
+} from '../api/onboarding';
 import arrowLeftIcon from '../assets/icons/arrow-left.svg';
 import guideAccessoriesIcon from '../assets/onboarding/guide-accessories.svg';
 import guideFaceIcon from '../assets/onboarding/guide-face.svg';
@@ -23,18 +34,17 @@ import { preloadFaceLandmarker } from './camera/faceLandmarker';
 const TOTAL_STEPS = 6;
 const HEIGHT_RANGE = { min: 100, max: 250 };
 
-const BODY_TYPE_WATER_RULES = [
-  { maxBmi: 18.5, millilitersPerKilogram: 35 },
-  { maxBmi: 25, millilitersPerKilogram: 30 },
-  { maxBmi: 30, millilitersPerKilogram: 28 },
-  { maxBmi: Number.POSITIVE_INFINITY, millilitersPerKilogram: 25 },
-];
-
 type AgreementKey = 'terms' | 'privacy' | 'age' | 'marketing';
 type AgreementModalKey = 'terms' | AdditionalAgreementKind;
 type SkinType = 'oily' | 'dry' | 'combination' | 'sensitive';
 
 const requiredAgreements: AgreementKey[] = ['terms', 'privacy', 'age'];
+const skinTypeApiValues: Record<SkinType, OnboardingSkinType> = {
+  oily: '지성',
+  dry: '건성',
+  combination: '복합성',
+  sensitive: '민감성',
+};
 const skinOptions = [
   { id: 'oily', title: '지성', description: '유분이 자주 올라와요.', icon: skinOilyIcon },
   { id: 'dry', title: '건성', description: '당기고 각질이 있어요.', icon: skinDryIcon },
@@ -73,15 +83,6 @@ const photoGuides = [
   },
 ];
 
-function calculateMockWaterGoal(heightInCentimeters: number, weightInKilograms: number) {
-  const heightInMeters = heightInCentimeters / 100;
-  const bmi = weightInKilograms / heightInMeters ** 2;
-  const rule = BODY_TYPE_WATER_RULES.find(({ maxBmi }) => bmi < maxBmi);
-  const liters = (weightInKilograms * (rule?.millilitersPerKilogram ?? 30)) / 1000;
-
-  return (Math.round(liters * 10) / 10).toFixed(1);
-}
-
 function AgreementLabel({ required, children }: { required: boolean; children: string }) {
   return (
     <span className="flex items-center gap-1">
@@ -110,6 +111,7 @@ function OnboardingPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedStep = Number(searchParams.get('step'));
   const [step, setStep] = useState(
@@ -130,10 +132,25 @@ function OnboardingPage() {
   const [photoConsent, setPhotoConsent] = useState(false);
   const [failureReason, setFailureReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [waterGoalMilliliters, setWaterGoalMilliliters] = useState<number | null>(null);
+  const { data: onboardingStatus } = useQuery({
+    queryKey: ['onboarding-status'],
+    queryFn: async () => (await getOnboardingStatus()).data,
+    staleTime: 30_000,
+    retry: false,
+  });
 
   useEffect(() => {
     void preloadFaceLandmarker().catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (onboardingStatus?.user.onboarded) {
+      navigate('/home', { replace: true });
+    }
+  }, [navigate, onboardingStatus]);
 
   const allAgreed = Object.values(agreements).every(Boolean);
   const requiredAgreed = requiredAgreements.every((key) => agreements[key]);
@@ -148,9 +165,26 @@ function OnboardingPage() {
   const heightError =
     height !== '' && !isHeightValid ? '100~250cm 사이로 입력해주세요.' : undefined;
   const waterGoal =
-    isHeightValid && isWeightValid
-      ? calculateMockWaterGoal(numericHeight, numericWeight)
-      : undefined;
+    waterGoalMilliliters === null ? undefined : (waterGoalMilliliters / 1000).toFixed(1);
+
+  useEffect(() => {
+    if (step !== 2 || !isHeightValid || !isWeightValid) return;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      void updateOnboardingProfile(
+        { height: numericHeight, weight: numericWeight },
+        controller.signal,
+      )
+        .then(({ data }) => setWaterGoalMilliliters(data.data.water_goal_ml))
+        .catch(() => undefined);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [isHeightValid, isWeightValid, numericHeight, numericWeight, step]);
 
   const canContinue = useMemo(() => {
     if (step === 1) return requiredAgreed;
@@ -185,18 +219,64 @@ function OnboardingPage() {
     setSearchParams({ step: String(nextStep) }, { replace: true });
   };
   const handleBack = () => step > 1 && goToStep(step - 1);
-  const handleNext = () => {
-    if (step === 4) {
-      navigate('/camera');
-      return;
+  const handleNext = async () => {
+    if (!canContinue || isSubmitting) return;
+
+    setApiError('');
+    setIsSubmitting(true);
+
+    try {
+      if (step === 1) {
+        await Promise.all([
+          saveRequiredAgreements(agreements.terms, agreements.privacy),
+          updateMarketingAgreement(agreements.marketing),
+        ]);
+      }
+
+      if (step === 2) {
+        const { data } = await updateOnboardingProfile({
+          height: numericHeight,
+          weight: numericWeight,
+        });
+        setWaterGoalMilliliters(data.data.water_goal_ml);
+      }
+
+      if (step === 3 && skinType) {
+        await updateOnboardingProfile({ skin_type: skinTypeApiValues[skinType] });
+      }
+
+      if (step === 4) {
+        await savePhotoGuideAgreement(photoConsent);
+        navigate('/camera');
+        return;
+      }
+
+      if (step === 5) {
+        const pauseReason = failureReason === 'other' ? customReason.trim() : failureReason;
+        await saveSkinCarePauseReason(pauseReason);
+      }
+
+      if (step === TOTAL_STEPS) {
+        const { data } = await completeOnboarding();
+        queryClient.setQueryData(['onboarding-status'], data);
+        navigate('/home', { replace: true });
+        return;
+      }
+
+      goToStep(step + 1);
+    } catch {
+      setApiError('저장에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
-    if (step === TOTAL_STEPS) {
-      navigate('/home');
-      return;
-    }
-    if (step < TOTAL_STEPS) goToStep(step + 1);
   };
-  const handleSkip = () => step < TOTAL_STEPS && goToStep(step + 1);
+
+  const handleSkip = () => {
+    if (step >= TOTAL_STEPS || isSubmitting) return;
+
+    setApiError('');
+    goToStep(step + 1);
+  };
   const toggleAgreement = (key: AgreementKey) =>
     setAgreements((current) => ({ ...current, [key]: !current[key] }));
   const toggleAllAgreements = () => {
@@ -308,7 +388,10 @@ function OnboardingPage() {
                 키
                 <Input
                   value={height}
-                  onChange={(event) => setHeight(event.target.value)}
+                  onChange={(event) => {
+                    setHeight(event.target.value);
+                    setWaterGoalMilliliters(null);
+                  }}
                   inputMode="decimal"
                   suffix="cm"
                   errorMessage={heightError}
@@ -320,7 +403,10 @@ function OnboardingPage() {
                 몸무게
                 <Input
                   value={weight}
-                  onChange={(event) => setWeight(event.target.value)}
+                  onChange={(event) => {
+                    setWeight(event.target.value);
+                    setWaterGoalMilliliters(null);
+                  }}
                   inputMode="decimal"
                   suffix="kg"
                   isValid={isWeightValid}
@@ -489,12 +575,23 @@ function OnboardingPage() {
       </div>
 
       <div className="absolute bottom-0 left-0 z-10 w-full border-0 bg-background px-4 pb-[max(29px,env(safe-area-inset-bottom))] pt-2 outline-none ring-0 shadow-none focus-within:outline-none">
+        {apiError && (
+          <p role="alert" className="mb-2 text-center text-caption text-danger">
+            {apiError}
+          </p>
+        )}
         <Button
-          disabled={!canContinue}
-          onClick={handleNext}
+          disabled={!canContinue || isSubmitting}
+          onClick={() => void handleNext()}
           aria-label={step === 6 ? '바로케어 시작하기' : undefined}
         >
-          {step === 4 ? '촬영 시작하기' : step === 6 ? '시작하기' : '다음'}
+          {isSubmitting
+            ? '저장 중...'
+            : step === 4
+              ? '촬영 시작하기'
+              : step === 6
+                ? '시작하기'
+                : '다음'}
         </Button>
       </div>
       {openAgreementModal === 'terms' && (
