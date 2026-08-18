@@ -4,6 +4,7 @@ import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { ANALYSIS_ESTIMATED_DURATION_MS, analyzeSkinPhoto } from '../../services/skinAnalysis';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
+import { useCheckinStore } from '../../stores/checkinStore';
 
 const MAX_PROGRESS_BEFORE_RESPONSE = 95;
 const COMPLETION_DISPLAY_MS = 300;
@@ -14,8 +15,14 @@ function AnalysisLoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
+  const [isCheckinPhotoAnalysis] = useState(
+    () =>
+      location.state?.source === 'checkin' ||
+      useCheckinStore.getState().isPhotoAnalysisPending,
+  );
   const [progress, setProgress] = useState(0);
-  const isGalleryUpload = location.state?.source === 'gallery';
+  const isGalleryUpload =
+    location.state?.source === 'gallery' || location.state?.imageSource === 'gallery';
 
   useEffect(() => {
     let cancelled = false;
@@ -41,8 +48,14 @@ function AnalysisLoadingPage() {
 
         window.cancelAnimationFrame(animationFrameId);
         setProgress(100);
+        if (isCheckinPhotoAnalysis) {
+          useCheckinStore.getState().completePhotoAnalysis();
+        }
         navigationTimeoutId = window.setTimeout(
-          () => navigate('/onboarding?step=5', { replace: true }),
+          () =>
+            navigate(isCheckinPhotoAnalysis ? '/checkin' : '/onboarding?step=5', {
+              replace: true,
+            }),
           COMPLETION_DISPLAY_MS,
         );
       })
@@ -60,7 +73,7 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, isGalleryUpload, navigate]);
+  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import analysisFailedIcon from '../../assets/icons/analysis-failed.svg';
 import { Button } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
@@ -9,6 +9,7 @@ import { readImageFile } from '../../utils/imageFile';
 function CameraPermissionPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
+  const location = useLocation();
   const navigate = useNavigate();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const setCapture = useCameraCaptureStore((state) => state.setCapture);
@@ -18,7 +19,10 @@ function CameraPermissionPage() {
 
     const previewUrl = await readImageFile(file);
     setCapture(file, previewUrl);
-    navigate('/analysis/loading', { replace: true, state: { source: 'gallery' } });
+    navigate('/analysis/loading', {
+      replace: true,
+      state: { ...location.state, imageSource: 'gallery' },
+    });
   };
 
   return (

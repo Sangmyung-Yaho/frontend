@@ -15,6 +15,8 @@ export function getFaceLandmarker() {
         minFaceDetectionConfidence: 0.5,
         minFacePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false,
       };
 
       try {
