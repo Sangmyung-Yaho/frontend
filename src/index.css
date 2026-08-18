@@ -72,7 +72,6 @@
   --text-sub--line-height: 1;
   --text-sub--font-weight: 400;
 }
-
 @layer base {
   html {
     background: var(--color-background);
@@ -105,17 +104,5 @@
   #root {
     min-height: 100vh;
     min-height: 100dvh;
-  }
-}
-
-@layer components {
-  .app-shell {
-    max-width: none;
-  }
-
-  @media (min-width: 640px) and (hover: hover) and (pointer: fine) {
-    .app-shell {
-      max-width: 393px;
-    }
   }
 }
