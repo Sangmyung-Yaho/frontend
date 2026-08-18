@@ -134,15 +134,15 @@ function AnalysisLoadingPage() {
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">
       <section className="absolute left-1/2 top-1/2 flex w-[210px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-8">
-        <LoadingIndicator label="피부 분석 중" />
+        <LoadingIndicator label={isCheckinPhotoAnalysis ? '피부 분석 중' : '사진 업로드 중'} />
         <div className="flex h-11 w-full flex-col items-center gap-4">
           <h1 className="h-[23px] whitespace-nowrap text-center text-[19px] font-bold leading-[23px] tracking-[-0.19px] text-text-analysis">
-            AI가 피부를 분석하고 있어요
+            {isCheckinPhotoAnalysis ? 'AI가 피부를 분석하고 있어요' : '사진을 업로드하고 있어요'}
           </h1>
           <div
             className="h-[5px] w-[190px] overflow-hidden rounded-full bg-main-100"
             role="progressbar"
-            aria-label="피부 분석 진행률"
+            aria-label={isCheckinPhotoAnalysis ? '피부 분석 진행률' : '사진 업로드 진행률'}
             aria-valuenow={Math.round(progress)}
             aria-valuemin={0}
             aria-valuemax={100}

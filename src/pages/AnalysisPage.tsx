@@ -1,33 +1,32 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { getReports, type ReportListItem, type SkinLevel } from '../api/reports';
+import { getSkinAnalysisHistory } from '../api/skinAnalysis';
+import calendarIcon from '../assets/icons/calender.svg';
 import emptyAnalysisIcon from '../assets/icons/emptyAnalysisIcon.svg';
+import statusCircleIcon from '../assets/icons/status-circle.svg';
 import { AnalysisSummaryCard, CalendarModal } from '../components/analysis';
 import { Button, StatusBadge } from '../components/common';
 import { BottomNavigation, type NavigationItem } from '../layouts';
 
-import calendarIcon from '../assets/icons/calender.svg';
-import statusCircleIcon from '../assets/icons/status-circle.svg';
+const levelLabel: Record<SkinLevel, string> = {
+  SAFE: '낮음',
+  CAUTION: '보통',
+  DANGER: '높음',
+};
 
-const records = [
-  {
-    date: '2026-08-07',
-    description: '수면 부족이 영향을 줬을 수 있어요.',
-    status: 'caution' as const,
-  },
-  {
-    date: '2026-08-06',
-    description: '수면 부족+스트레스가 겹친 날이에요.',
-    status: 'danger' as const,
-  },
-  { date: '2026-08-05', description: '전반적으로 양호한 상태예요.', status: 'safe' as const },
-];
+const levelStatus: Record<SkinLevel, 'safe' | 'caution' | 'danger'> = {
+  SAFE: 'safe',
+  CAUTION: 'caution',
+  DANGER: 'danger',
+};
 
-function formatToday(date: Date) {
-  return `오늘 · ${new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-  }).format(date)}`;
-}
+const levelColor: Record<SkinLevel, string> = {
+  SAFE: 'bg-main-100',
+  CAUTION: 'bg-warning',
+  DANGER: 'bg-danger',
+};
 
 function formatDateKey(date: Date) {
   const year = date.getFullYear();
@@ -45,10 +44,28 @@ function formatRecordDate(date: string) {
   return `${Number(month)}/${Number(day)}`;
 }
 
+function formatSummaryDate(date: string) {
+  const formatted = new Intl.DateTimeFormat('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(`${date}T00:00:00`));
+  return date === formatDateKey(new Date()) ? `오늘 · ${formatted}` : formatted;
+}
+
 function AnalysisPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isEmpty = searchParams.get('state') === 'empty';
+  const reportsQuery = useQuery({
+    queryKey: ['reports'],
+    queryFn: getReports,
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const historyQuery = useQuery({
+    queryKey: ['skin-analysis-history', 28],
+    queryFn: () => getSkinAnalysisHistory(28),
+    staleTime: 30_000,
+    retry: 1,
+  });
 
   const handleNavigation = (item: NavigationItem) => {
     const routeByItem: Record<NavigationItem, string> = {
@@ -60,9 +77,30 @@ function AnalysisPage() {
     navigate(routeByItem[item]);
   };
 
+  const isPending = reportsQuery.isPending || historyQuery.isPending;
+  const isError = reportsQuery.isError || historyQuery.isError;
+  const reports = reportsQuery.data ?? [];
+
   return (
-    <main className="relative flex flex-col bg-background">
-      {isEmpty ? <EmptyAnalysis onCheckin={() => navigate('/checkin')} /> : <AnalysisReport />}
+    <main className="relative flex min-h-dvh flex-col bg-background">
+      {isPending ? (
+        <CenteredMessage message="분석 기록을 불러오고 있어요." />
+      ) : isError ? (
+        <CenteredMessage message="분석 기록을 불러오지 못했어요.">
+          <Button
+            onClick={() => {
+              void reportsQuery.refetch();
+              void historyQuery.refetch();
+            }}
+          >
+            다시 시도
+          </Button>
+        </CenteredMessage>
+      ) : reports.length === 0 ? (
+        <EmptyAnalysis onCheckin={() => navigate('/checkin')} />
+      ) : (
+        <AnalysisReport reports={reports} history={historyQuery.data?.history ?? []} />
+      )}
 
       <BottomNavigation
         activeItem="analysis"
@@ -94,34 +132,44 @@ function EmptyAnalysis({ onCheckin }: { onCheckin: () => void }) {
   );
 }
 
-function AnalysisReport() {
+interface AnalysisReportProps {
+  reports: ReportListItem[];
+  history: Array<{ date: string; redness_level: SkinLevel; trouble_level: SkinLevel }>;
+}
+
+function AnalysisReport({ reports, history }: AnalysisReportProps) {
   const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const visibleRecords = selectedDate
-    ? records.filter((record) => record.date === formatDateKey(selectedDate))
-    : records;
+  const selectedDateKey = selectedDate ? formatDateKey(selectedDate) : null;
+  const visibleReports = selectedDateKey
+    ? reports.filter((report) => report.report_date === selectedDateKey)
+    : reports;
+  const summaryReport = visibleReports[0] ?? reports[0];
+  const summaryHistory = history.find((item) => item.date === summaryReport.report_date);
+  const rednessLevel = summaryHistory?.redness_level ?? summaryReport.skin_level;
+  const troubleLevel = summaryHistory?.trouble_level ?? summaryReport.skin_level;
 
   return (
     <div className="flex flex-1 flex-col pb-[calc(78px+env(safe-area-inset-bottom))] pt-[10px]">
       <AnalysisSummaryCard
-        dateLabel={formatToday(new Date())}
-        title="수면 부족이 트러블 원인일 수 있어요."
+        dateLabel={formatSummaryDate(summaryReport.report_date)}
+        title={summaryReport.summary}
         metrics={[
           {
             label: '붉은기',
-            value: '낮음',
+            value: levelLabel[rednessLevel],
             iconSrc: statusCircleIcon,
-            iconClassName: 'bg-danger',
+            iconClassName: levelColor[rednessLevel],
           },
           {
             label: '트러블',
-            value: '보통',
+            value: levelLabel[troubleLevel],
             iconSrc: statusCircleIcon,
-            iconClassName: 'bg-warning',
+            iconClassName: levelColor[troubleLevel],
           },
         ]}
-        onDetails={() => navigate('/analysis/detail')}
+        onDetails={() => navigate(`/analysis/detail?reportId=${summaryReport.report_id}`)}
       />
 
       <button
@@ -143,25 +191,29 @@ function AnalysisReport() {
       </div>
 
       <ol className="space-y-[18px]">
-        {visibleRecords.map((record) => (
+        {visibleReports.map((report) => (
           <li
-            key={record.date}
+            key={report.report_id}
             className="grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-2"
           >
-            <time dateTime={record.date} className="text-body-small font-medium">
-              {formatRecordDate(record.date)}
+            <time dateTime={report.report_date} className="text-body-small font-medium">
+              {formatRecordDate(report.report_date)}
             </time>
-            <article className="flex h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-              <p className="text-body-small font-semibold leading-5">{record.description}</p>
-              <StatusBadge status={record.status} className="shrink-0" />
-            </article>
+            <button
+              type="button"
+              onClick={() => navigate(`/analysis/detail?reportId=${report.report_id}`)}
+              className="flex h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+            >
+              <span className="text-body-small font-semibold leading-5">{report.summary}</span>
+              <StatusBadge status={levelStatus[report.skin_level]} className="shrink-0" />
+            </button>
           </li>
         ))}
       </ol>
 
-      {selectedDate && visibleRecords.length === 0 && (
+      {selectedDate && visibleReports.length === 0 && (
         <p className="py-8 text-center text-body-small text-text-secondary">
-          선택한 날짜의 기록이 없어요.
+          선택한 날짜에 기록이 없어요.
         </p>
       )}
 
@@ -179,6 +231,15 @@ function AnalysisReport() {
         }}
       />
     </div>
+  );
+}
+
+function CenteredMessage({ message, children }: { message: string; children?: React.ReactNode }) {
+  return (
+    <section className="flex flex-1 flex-col items-center justify-center gap-5 pb-[calc(62px+env(safe-area-inset-bottom))] text-center">
+      <p className="text-body-small text-text-secondary">{message}</p>
+      {children}
+    </section>
   );
 }
 
