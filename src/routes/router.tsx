@@ -13,59 +13,70 @@ import AnalysisPage from '../pages/AnalysisPage';
 import AnalysisDetailPage from '../pages/AnalysisDetailPage';
 import GalleryAnalysisFailurePage from '../pages/exception/GalleryAnalysisFailurePage';
 import RouteErrorPage from '../pages/exception/RouteErrorPage';
+import OAuthSuccessPage from '../pages/OAuthSuccessPage';
+import RequireAuth from './RequireAuth';
 
 export const router = createBrowserRouter([
   {
-    Component: AppLayout,
+    Component: RequireAuth,
     ErrorBoundary: RouteErrorPage,
     children: [
       {
-        index: true,
-        Component: App,
-      },
-      {
-        path: '/home',
-        Component: HomePage,
-      },
-      {
-        path: '/checkin',
-        Component: CheckinPage,
-      },
-      {
-        path: '/onboarding',
-        Component: OnboardingPage,
-      },
-      {
-        path: '/mission',
-        Component: RoutinePage,
-      },
-      {
-        path: '/camera',
-        Component: CameraPage,
-      },
-      {
-        path: '/camera/reception',
-        Component: CameraPermissionPage,
-      },
-      {
-        path: '/analysis',
-        Component: AnalysisPage,
-      },
-      {
-        path: '/analysis/detail',
-        Component: AnalysisDetailPage,
-      },
-      {
-        path: '/analysis/loading',
-        Component: AnalysisLoadingPage,
-      },
-      {
-        path: '/analysis/failure',
-        Component: AnalysisFailurePage,
-      },
-      {
-        path: '/analysis/gallery-failure',
-        Component: GalleryAnalysisFailurePage,
+        Component: AppLayout,
+        children: [
+          {
+            index: true,
+            Component: App,
+          },
+          {
+            path: '/oauth/success',
+            Component: OAuthSuccessPage,
+          },
+          {
+            path: '/home',
+            Component: HomePage,
+          },
+          {
+            path: '/checkin',
+            Component: CheckinPage,
+          },
+          {
+            path: '/onboarding',
+            Component: OnboardingPage,
+          },
+          {
+            path: '/mission',
+            Component: RoutinePage,
+          },
+          {
+            path: '/camera',
+            Component: CameraPage,
+          },
+          {
+            path: '/camera/reception',
+            Component: CameraPermissionPage,
+          },
+          {
+            path: '/analysis',
+            Component: AnalysisPage,
+          },
+          {
+            path: '/analysis/detail',
+            Component: AnalysisDetailPage,
+          },
+          {
+            path: '/analysis/loading',
+            Component: AnalysisLoadingPage,
+          },
+          {
+            path: '/analysis/failure',
+            Component: AnalysisFailurePage,
+          },
+          {
+            path: '/analysis/gallery-failure',
+            Component: GalleryAnalysisFailurePage,
+          },
+        ],
       },
     ],
   },

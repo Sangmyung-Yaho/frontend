@@ -55,15 +55,17 @@ npm run preview
 
 루트의 `.env.example`을 참고해 `.env.local`에 환경별 값을 설정합니다.
 
-| 변수                | 설명                 | 로컬 예시                   |
-| ------------------- | -------------------- | --------------------------- |
-| `VITE_API_BASE_URL` | 백엔드 API 기본 주소 | `http://localhost:8080/api` |
+| 변수                    | 설명                     | 로컬 예시                                             |
+| ----------------------- | ------------------------ | ----------------------------------------------------- |
+| `VITE_API_BASE_URL`     | 백엔드 API 기본 주소     | `http://localhost:8080`                               |
+| `VITE_GOOGLE_OAUTH_URL` | 구글 로그인 시작 API URL | `http://localhost:8080/api/v1/auth/oauth/google`      |
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8080
+VITE_GOOGLE_OAUTH_URL=http://localhost:8080/api/v1/auth/oauth/google
 ```
 
-`.env.local`은 Git에 포함되지 않습니다. OAuth 관련 환경변수와 Redirect URI는 로그인 구현 방식이 확정된 후 추가합니다.
+`.env.local`은 Git에 포함되지 않습니다. OAuth Client Secret과 Redirect URI는 백엔드에서 관리합니다.
 
 ## 💻 개발 환경
 

@@ -1,6 +1,7 @@
 import appLogo from '../assets/logo/app-logo.svg';
 import googleIcon from '../assets/icons/google.svg';
 import kakaoIcon from '../assets/icons/kakao.svg';
+import { startOAuthLogin } from '../api/auth';
 import { LogoCard } from '../components/common';
 
 function LandingPage() {
@@ -30,6 +31,7 @@ function LandingPage() {
       <section aria-label="소셜 로그인" className="mt-auto space-y-2">
         <button
           type="button"
+          onClick={() => startOAuthLogin('kakao')}
           className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-status-yellow px-4 text-headline text-[#321b1b] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           <img src={kakaoIcon} alt="" className="h-6 w-6" />
@@ -38,6 +40,7 @@ function LandingPage() {
 
         <button
           type="button"
+          onClick={() => startOAuthLogin('google')}
           className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-white px-4 text-headline text-text-primary transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
         >
           <img src={googleIcon} alt="" className="h-7 w-7 shrink-0" />
