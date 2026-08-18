@@ -11,7 +11,11 @@ import skinDryIcon from '../assets/onboarding/skin-dry.svg';
 import skinOilyIcon from '../assets/onboarding/skin-oily.svg';
 import skinSensitiveIcon from '../assets/onboarding/skin-sensitive.svg';
 import { Button, Checkbox, Input, Radio } from '../components/common';
+import AdditionalAgreementModal, {
+  type AdditionalAgreementKind,
+} from '../components/onboarding/AdditionalAgreementModal';
 import OnboardingProgress from '../components/onboarding/OnboardingProgress';
+import TermsAgreementModal from '../components/onboarding/TermsAgreementModal';
 import { THEME_COLORS, useThemeColor } from '../hooks/useThemeColor';
 import { BackHeader } from '../layouts';
 import { preloadFaceLandmarker } from './camera/faceLandmarker';
@@ -27,6 +31,7 @@ const BODY_TYPE_WATER_RULES = [
 ];
 
 type AgreementKey = 'terms' | 'privacy' | 'age' | 'marketing';
+type AgreementModalKey = 'terms' | AdditionalAgreementKind;
 type SkinType = 'oily' | 'dry' | 'combination' | 'sensitive';
 
 const requiredAgreements: AgreementKey[] = ['terms', 'privacy', 'age'];
@@ -77,27 +82,27 @@ function calculateMockWaterGoal(heightInCentimeters: number, weightInKilograms: 
   return (Math.round(liters * 10) / 10).toFixed(1);
 }
 
-function AgreementLabel({
-  required,
-  children,
-  hasDetails = true,
-}: {
-  required: boolean;
-  children: string;
-  hasDetails?: boolean;
-}) {
+function AgreementLabel({ required, children }: { required: boolean; children: string }) {
   return (
-    <span className="flex min-w-0 flex-1 items-center justify-between">
-      <span className="flex items-center gap-1">
-        <span className={`text-caption ${required ? 'text-danger' : 'text-text-secondary'}`}>
-          ({required ? '필수' : '선택'})
-        </span>
-        <span className="text-body text-text-primary">{children}</span>
+    <span className="flex items-center gap-1">
+      <span className={`text-caption ${required ? 'text-danger' : 'text-text-secondary'}`}>
+        ({required ? '필수' : '선택'})
       </span>
-      {hasDetails && (
-        <img src={arrowLeftIcon} alt="" className="h-3 w-1.5 rotate-180" aria-hidden="true" />
-      )}
+      <span className="text-body text-text-primary">{children}</span>
     </span>
+  );
+}
+
+function AgreementDetailsButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${label} 상세 보기`}
+      className="flex size-6 shrink-0 items-center justify-end rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
+    >
+      <img src={arrowLeftIcon} alt="" className="h-3 w-1.5 rotate-180" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -118,6 +123,7 @@ function OnboardingPage() {
     age: false,
     marketing: false,
   });
+  const [openAgreementModal, setOpenAgreementModal] = useState<AgreementModalKey | null>(null);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [skinType, setSkinType] = useState<SkinType | null>(null);
@@ -184,6 +190,10 @@ function OnboardingPage() {
       navigate('/camera');
       return;
     }
+    if (step === TOTAL_STEPS) {
+      navigate('/home');
+      return;
+    }
     if (step < TOTAL_STEPS) goToStep(step + 1);
   };
   const handleSkip = () => step < TOTAL_STEPS && goToStep(step + 1);
@@ -237,35 +247,49 @@ function OnboardingPage() {
               }
             />
             <div className="flex flex-col gap-4">
-              <Checkbox
-                checked={agreements.terms}
-                onChange={() => toggleAgreement('terms')}
-                className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                label={<AgreementLabel required>이용약관</AgreementLabel>}
-              />
-              <Checkbox
-                checked={agreements.privacy}
-                onChange={() => toggleAgreement('privacy')}
-                className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                label={<AgreementLabel required>개인정보 수집 · 이용</AgreementLabel>}
-              />
+              <div className="flex w-full items-center gap-4">
+                <Checkbox
+                  checked={agreements.terms}
+                  onChange={() => toggleAgreement('terms')}
+                  className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
+                  label={<AgreementLabel required>이용약관</AgreementLabel>}
+                />
+                <AgreementDetailsButton
+                  label="이용약관"
+                  onClick={() => setOpenAgreementModal('terms')}
+                />
+              </div>
+              <div className="flex w-full items-center gap-4">
+                <Checkbox
+                  checked={agreements.privacy}
+                  onChange={() => toggleAgreement('privacy')}
+                  className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
+                  label={<AgreementLabel required>개인정보 수집 · 이용</AgreementLabel>}
+                />
+                <AgreementDetailsButton
+                  label="개인정보 수집 · 이용"
+                  onClick={() => setOpenAgreementModal('privacy')}
+                />
+              </div>
               <Checkbox
                 checked={agreements.age}
                 onChange={() => toggleAgreement('age')}
                 className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                label={
-                  <AgreementLabel required hasDetails={false}>
-                    만 14세 이상
-                  </AgreementLabel>
-                }
+                label={<AgreementLabel required>만 14세 이상</AgreementLabel>}
               />
               <div className="border-t border-gray-100 pt-4">
-                <Checkbox
-                  checked={agreements.marketing}
-                  onChange={() => toggleAgreement('marketing')}
-                  className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                  label={<AgreementLabel required={false}>마케팅 정보 수신</AgreementLabel>}
-                />
+                <div className="flex w-full items-center gap-4">
+                  <Checkbox
+                    checked={agreements.marketing}
+                    onChange={() => toggleAgreement('marketing')}
+                    className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
+                    label={<AgreementLabel required={false}>마케팅 정보 수신</AgreementLabel>}
+                  />
+                  <AgreementDetailsButton
+                    label="마케팅 정보 수신"
+                    onClick={() => setOpenAgreementModal('marketing')}
+                  />
+                </div>
               </div>
             </div>
           </section>
@@ -473,6 +497,15 @@ function OnboardingPage() {
           {step === 4 ? '촬영 시작하기' : step === 6 ? '시작하기' : '다음'}
         </Button>
       </div>
+      {openAgreementModal === 'terms' && (
+        <TermsAgreementModal onClose={() => setOpenAgreementModal(null)} />
+      )}
+      {(openAgreementModal === 'privacy' || openAgreementModal === 'marketing') && (
+        <AdditionalAgreementModal
+          kind={openAgreementModal}
+          onClose={() => setOpenAgreementModal(null)}
+        />
+      )}
     </main>
   );
 }

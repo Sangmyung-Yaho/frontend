@@ -15,6 +15,8 @@ const WAVE_ASSETS = [
   { src: wave2, top: 142.21 },
 ];
 
+const FIGMA_STATUS_BAR_HEIGHT = 54;
+
 function formatToday(date: Date) {
   return new Intl.DateTimeFormat('ko-KR', {
     month: 'long',
@@ -51,15 +53,17 @@ function HomePage() {
   };
 
   return (
-    <main className="relative overflow-x-hidden bg-background">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[191px] overflow-hidden bg-gradient-to-b from-main-100 to-background">
+    <main className="relative bg-background">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[calc(137px+env(safe-area-inset-top))] w-[393px] max-w-[100vw] -translate-x-1/2 overflow-hidden bg-gradient-to-b from-main-100 to-background">
         {WAVE_ASSETS.map(({ src, top }) => (
           <img
             key={src}
             src={src}
             alt=""
             className="absolute left-1/2 h-[92.14px] w-[471.21px] max-w-none -translate-x-1/2"
-            style={{ top: `${top}px` }}
+            style={{
+              top: `calc(${top - FIGMA_STATUS_BAR_HEIGHT}px + env(safe-area-inset-top))`,
+            }}
           />
         ))}
       </div>
