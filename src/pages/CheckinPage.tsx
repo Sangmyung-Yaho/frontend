@@ -2,10 +2,10 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createCheckin, getCheckinsByDateRange, getTodayCheckin } from '../api/checkins';
-import { getHomeDashboard } from '../api/home';
 import cameraIcon from '../assets/icons/camera.svg';
 import { Button, Input, NumberOption } from '../components/common';
 import { BackHeader } from '../layouts';
+import { getPendingOnboardingSkinImageId } from '../services/pendingOnboardingSkinImage';
 import { useCheckinStore } from '../stores/checkinStore';
 
 const CHECKIN_HISTORY_START_DATE = '2000-01-01';
@@ -42,21 +42,13 @@ function CheckinPage() {
   const today = formatLocalDate(new Date());
   const { data: checkinHistory } = useQuery({
     queryKey: ['checkins', 'history', CHECKIN_HISTORY_START_DATE, today],
-    queryFn: async () =>
-      (await getCheckinsByDateRange(CHECKIN_HISTORY_START_DATE, today)).data,
+    queryFn: async () => (await getCheckinsByDateRange(CHECKIN_HISTORY_START_DATE, today)).data,
     staleTime: 30_000,
     retry: 1,
   });
-  const { data: dashboard } = useQuery({
-    queryKey: ['home-dashboard'],
-    queryFn: async () => (await getHomeDashboard()).data.data,
-    staleTime: 30_000,
-    retry: 1,
-  });
-
   const isFirstCheckin = checkinHistory?.length === 0;
-  const hasReusableOnboardingPhoto =
-    isFirstCheckin && dashboard?.latest_skin_analysis?.is_baseline === true;
+  const pendingOnboardingSkinImageId = getPendingOnboardingSkinImageId();
+  const hasReusableOnboardingPhoto = isFirstCheckin && pendingOnboardingSkinImageId !== null;
   const isPhotoReady = isPhotoComplete || hasReusableOnboardingPhoto;
 
   const waterIntake = Number(water);
@@ -83,23 +75,11 @@ function CheckinPage() {
     isStartingAnalysisRef.current = true;
 
     try {
-      const { data } = await createCheckin({
+      await createCheckin({
         sleep_hours: sleepHours,
         stress_level: stress,
         water_intake_ml: waterIntake,
       });
-
-      if (hasReusableOnboardingPhoto && !isPhotoComplete) {
-        queryClient.setQueryData(['today-checkin'], data);
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['home-dashboard'] }),
-          queryClient.invalidateQueries({ queryKey: ['checkins'] }),
-          queryClient.invalidateQueries({ queryKey: ['today-routine'] }),
-        ]);
-        resetCheckin();
-        navigate('/home', { replace: true });
-        return;
-      }
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['home-dashboard'], refetchType: 'none' }),
@@ -112,6 +92,7 @@ function CheckinPage() {
         state: {
           source: 'checkin',
           imageSource: location.state?.imageSource,
+          usePendingOnboardingImage: hasReusableOnboardingPhoto && !isPhotoComplete,
         },
       });
     } catch {
@@ -155,7 +136,9 @@ function CheckinPage() {
         </section>
 
         <fieldset>
-          <legend className="mb-3 text-caption-3 leading-normal text-text-primary">오늘 스트레스</legend>
+          <legend className="mb-3 text-caption-3 leading-normal text-text-primary">
+            오늘 스트레스
+          </legend>
           <div className="grid grid-cols-5 gap-3">
             {[1, 2, 3, 4, 5].map((value) => (
               <NumberOption
@@ -206,7 +189,12 @@ function CheckinPage() {
                   viewBox="0 0 24 24"
                   className="size-6 shrink-0 fill-none stroke-current"
                 >
-                  <path d="m5 12 4 4L19 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="m5 12 4 4L19 6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               ) : (
                 <img src={cameraIcon} alt="" aria-hidden="true" className="size-6 shrink-0" />

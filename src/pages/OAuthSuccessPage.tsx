@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_TOKEN_STORAGE_KEYS } from '../api/auth';
+import { clearPendingOnboardingSkinImageId } from '../services/pendingOnboardingSkinImage';
 
 function OAuthSuccessPage() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ function OAuthSuccessPage() {
       return;
     }
 
+    clearPendingOnboardingSkinImageId();
     localStorage.setItem(AUTH_TOKEN_STORAGE_KEYS.accessToken, accessToken);
     localStorage.setItem(AUTH_TOKEN_STORAGE_KEYS.refreshToken, refreshToken);
 

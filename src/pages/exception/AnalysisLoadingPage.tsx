@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { requestSkinAnalysis } from '../../api/skinAnalysis';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
-import { ANALYSIS_ESTIMATED_DURATION_MS, analyzeSkinPhoto } from '../../services/skinAnalysis';
+import {
+  clearPendingOnboardingSkinImageId,
+  getPendingOnboardingSkinImageId,
+  setPendingOnboardingSkinImageId,
+} from '../../services/pendingOnboardingSkinImage';
+import {
+  ANALYSIS_ESTIMATED_DURATION_MS,
+  analyzeSkinPhoto,
+  uploadSkinPhoto,
+} from '../../services/skinAnalysis';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
 import { useCheckinStore } from '../../stores/checkinStore';
 
@@ -17,10 +27,9 @@ function AnalysisLoadingPage() {
   const queryClient = useQueryClient();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
+  const setAnalysisResult = useCameraCaptureStore((state) => state.setAnalysisResult);
   const [isCheckinPhotoAnalysis] = useState(
-    () =>
-      location.state?.source === 'checkin' ||
-      useCheckinStore.getState().isPhotoAnalysisPending,
+    () => location.state?.source === 'checkin' || useCheckinStore.getState().isPhotoAnalysisPending,
   );
   const [progress, setProgress] = useState(0);
   const isGalleryUpload =
@@ -44,7 +53,34 @@ function AnalysisLoadingPage() {
 
     animationFrameId = window.requestAnimationFrame(updateProgress);
 
-    void analyzeSkinPhoto(imageBlob)
+    const processSkinPhoto = async () => {
+      if (isCheckinPhotoAnalysis) {
+        const usePendingOnboardingImage = location.state?.usePendingOnboardingImage === true;
+        const pendingSkinImageId = usePendingOnboardingImage
+          ? getPendingOnboardingSkinImageId()
+          : null;
+
+        if (usePendingOnboardingImage && pendingSkinImageId === null) {
+          throw new Error('저장된 온보딩 피부 이미지가 없습니다.');
+        }
+
+        const analysisResult = pendingSkinImageId
+          ? await requestSkinAnalysis(pendingSkinImageId)
+          : await analyzeSkinPhoto(imageBlob);
+
+        if (pendingSkinImageId) {
+          clearPendingOnboardingSkinImageId();
+        }
+        setAnalysisResult(analysisResult);
+        useCheckinStore.getState().completePhotoAnalysis();
+        return;
+      }
+
+      const { skin_image_id: skinImageId } = await uploadSkinPhoto(imageBlob);
+      setPendingOnboardingSkinImageId(skinImageId);
+    };
+
+    void processSkinPhoto()
       .then(async () => {
         if (cancelled) return;
 
@@ -92,6 +128,7 @@ function AnalysisLoadingPage() {
     location.state,
     navigate,
     queryClient,
+    setAnalysisResult,
   ]);
 
   return (

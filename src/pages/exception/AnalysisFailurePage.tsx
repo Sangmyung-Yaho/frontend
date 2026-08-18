@@ -21,7 +21,11 @@ function AnalysisFailurePage() {
     setCapture(file, previewUrl);
     navigate('/analysis/loading', {
       replace: true,
-      state: { ...location.state, imageSource: 'gallery' },
+      state: {
+        ...location.state,
+        imageSource: 'gallery',
+        usePendingOnboardingImage: false,
+      },
     });
   };
 
