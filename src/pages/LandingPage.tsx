@@ -7,7 +7,7 @@ import { LogoCard } from '../components/common';
 function LandingPage() {
   return (
     <main
-      className="relative -mx-4 flex min-h-dvh w-[calc(100%+32px)] flex-col overflow-hidden px-4 pb-[max(95px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
+      className="relative -mx-4 flex min-h-dvh w-[calc(100%+32px)] flex-col overflow-x-hidden px-4 pb-[max(95px,env(safe-area-inset-bottom))] pt-[clamp(112px,24vh,205px)]"
       style={{
         background:
           'linear-gradient(180deg, #FFF 0%, #C0DEA9 19.71%, #A5D084 52.88%, #5DAB22 100%)',
@@ -28,7 +28,9 @@ function LandingPage() {
         </p>
       </section>
 
-      <section aria-label="소셜 로그인" className="mt-auto space-y-2">
+      <div aria-hidden="true" className="min-h-12 flex-1" />
+
+      <section aria-label="소셜 로그인" className="space-y-2">
         <button
           type="button"
           onClick={() => startOAuthLogin('kakao')}
