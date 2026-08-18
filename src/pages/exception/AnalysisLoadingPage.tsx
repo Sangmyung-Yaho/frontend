@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
@@ -13,6 +14,7 @@ function AnalysisLoadingPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
   const [isCheckinPhotoAnalysis] = useState(
@@ -43,17 +45,23 @@ function AnalysisLoadingPage() {
     animationFrameId = window.requestAnimationFrame(updateProgress);
 
     void analyzeSkinPhoto(imageBlob)
-      .then(() => {
+      .then(async () => {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
         setProgress(100);
         if (isCheckinPhotoAnalysis) {
-          useCheckinStore.getState().completePhotoAnalysis();
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['home-dashboard'] }),
+            queryClient.invalidateQueries({ queryKey: ['today-checkin'] }),
+            queryClient.invalidateQueries({ queryKey: ['checkins'] }),
+            queryClient.invalidateQueries({ queryKey: ['today-routine'] }),
+          ]);
+          useCheckinStore.getState().reset();
         }
         navigationTimeoutId = window.setTimeout(
           () =>
-            navigate(isCheckinPhotoAnalysis ? '/checkin' : '/onboarding?step=5', {
+            navigate(isCheckinPhotoAnalysis ? '/home' : '/onboarding?step=5', {
               replace: true,
             }),
           COMPLETION_DISPLAY_MS,
@@ -65,6 +73,10 @@ function AnalysisLoadingPage() {
         window.cancelAnimationFrame(animationFrameId);
         navigate(isGalleryUpload ? '/analysis/gallery-failure' : '/analysis/failure', {
           replace: true,
+          state: {
+            source: isCheckinPhotoAnalysis ? 'checkin' : location.state?.source,
+            imageSource: location.state?.imageSource,
+          },
         });
       });
 
@@ -73,7 +85,14 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate]);
+  }, [
+    imageBlob,
+    isCheckinPhotoAnalysis,
+    isGalleryUpload,
+    location.state,
+    navigate,
+    queryClient,
+  ]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">

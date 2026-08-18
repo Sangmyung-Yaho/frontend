@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import galleryErrorIcon from '../../assets/icons/gallery-error.svg';
 import { Button } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
@@ -10,6 +10,7 @@ function GalleryAnalysisFailurePage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const setCapture = useCameraCaptureStore((state) => state.setCapture);
 
@@ -18,7 +19,10 @@ function GalleryAnalysisFailurePage() {
 
     const previewUrl = await readImageFile(file);
     setCapture(file, previewUrl);
-    navigate('/analysis/loading', { replace: true, state: { source: 'gallery' } });
+    navigate('/analysis/loading', {
+      replace: true,
+      state: { ...location.state, imageSource: 'gallery' },
+    });
   };
 
   return (

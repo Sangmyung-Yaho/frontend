@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { getHomeDashboard, getUserProfile, type SkinGrade } from '../api/home';
 import wave1 from '../assets/home/wave-1.svg';
 import wave2 from '../assets/home/wave-2.svg';
 import wave3 from '../assets/home/wave-3.svg';
 import wave4 from '../assets/home/wave-4.svg';
 import { HomeCheckinCard, RoutineCard, SkinAnalysisSection, StreakCard } from '../components/home';
 import { BottomNavigation, type NavigationItem } from '../layouts';
-import { HOME_MOCK_DATA, isHomeViewState } from '../mocks/home';
 
 const WAVE_ASSETS = [
   { src: wave4, top: 40.06 },
@@ -16,6 +17,11 @@ const WAVE_ASSETS = [
 ];
 
 const FIGMA_STATUS_BAR_HEIGHT = 54;
+const GRADE_LABELS: Record<SkinGrade, string> = {
+  SAFE: '낮음',
+  CAUTION: '보통',
+  DANGER: '높음',
+};
 
 function formatToday(date: Date) {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -27,10 +33,31 @@ function formatToday(date: Date) {
 
 function HomePage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const requestedState = searchParams.get('state');
-  const viewState = isHomeViewState(requestedState) ? requestedState : 'pending';
-  const data = HOME_MOCK_DATA[viewState];
+  const {
+    data: dashboard,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['home-dashboard'],
+    queryFn: async () => (await getHomeDashboard()).data.data,
+    retry: 1,
+  });
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => (await getUserProfile()).data.data,
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+
+  const latestAnalysis = dashboard?.latest_skin_analysis ?? null;
+  const todayRoutine = dashboard?.today_routine;
+  const isTodayCheckedIn = todayRoutine?.is_checkin_completed ?? false;
+  const hasPreviousRecord = latestAnalysis !== null;
+  const routines = (todayRoutine?.routines ?? []).slice(0, 2).map((routine) => ({
+    title: routine.title,
+    duration: `${routine.estimated_minutes}분`,
+  }));
 
   useEffect(() => {
     const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -44,7 +71,7 @@ function HomePage() {
 
   const handleNavigation = (item: NavigationItem) => {
     const routeByItem: Record<NavigationItem, string> = {
-      home: '/',
+      home: '/home',
       analysis: '/analysis',
       mission: '/mission',
       my: '/my',
@@ -71,29 +98,50 @@ function HomePage() {
       <header className="relative z-10 flex w-[253px] flex-col gap-2 pt-[calc(env(safe-area-inset-top)+24px)] text-main-800">
         <p className="text-caption-3 leading-[17px]">{formatToday(new Date())}</p>
         <h1 className="whitespace-nowrap text-title-1 leading-[29px]">
-          {data.userName}님, 좋은 아침이에요.
+          {profile?.nickname ?? '사용자'}님, 좋은 아침이에요.
         </h1>
       </header>
 
-      <div className="relative z-10 mt-6 flex w-full flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]">
+      <div
+        className="relative z-10 mt-6 flex w-full flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]"
+        aria-busy={isLoading}
+      >
+        {isError && (
+          <div
+            role="alert"
+            className="flex items-center justify-between rounded-[10px] border border-danger/30 bg-card px-4 py-3 text-body-small"
+          >
+            <span>홈 정보를 불러오지 못했어요.</span>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="font-semibold text-main-700 hover:underline focus-visible:underline"
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
         <HomeCheckinCard
-          isCheckedIn={data.isTodayCheckedIn}
-          checkinTitleLines={data.checkinTitleLines}
-          onAction={() => navigate(data.isTodayCheckedIn ? '/analysis' : '/checkin')}
+          isCheckedIn={isTodayCheckedIn}
+          checkinSummary={dashboard?.latest_report?.summary ?? '오늘 체크인을 완료했어요.'}
+          onAction={() => navigate(isTodayCheckedIn ? '/analysis' : '/checkin')}
         />
-        <StreakCard days={data.weeklyRecordDays} hasRecord={data.hasPreviousRecord} />
+        <StreakCard
+          days={dashboard?.weekly_checkins.checked_count ?? 0}
+          hasRecord={(dashboard?.weekly_checkins.checked_count ?? 0) > 0}
+        />
         <SkinAnalysisSection
-          hasRecord={data.hasPreviousRecord}
-          rednessGrade={data.rednessGrade}
-          troubleGrade={data.troubleGrade}
+          hasRecord={hasPreviousRecord}
+          rednessGrade={latestAnalysis ? GRADE_LABELS[latestAnalysis.redness] : null}
+          troubleGrade={latestAnalysis ? GRADE_LABELS[latestAnalysis.trouble] : null}
           onViewDetails={() => navigate('/analysis')}
         />
         <RoutineCard
-          isCheckedIn={data.isTodayCheckedIn}
-          progress={data.routineProgress}
-          routines={data.routines}
+          isCheckedIn={isTodayCheckedIn}
+          progress={todayRoutine?.today_progress_percent ?? 0}
+          routines={routines}
           onClick={() =>
-            navigate(data.isTodayCheckedIn ? '/mission?state=default' : '/mission?state=empty')
+            navigate(isTodayCheckedIn ? '/mission?state=default' : '/mission?state=empty')
           }
         />
       </div>

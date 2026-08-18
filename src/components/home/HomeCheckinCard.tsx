@@ -1,10 +1,10 @@
 interface HomeCheckinCardProps {
   isCheckedIn: boolean;
-  checkinTitleLines: [string, string];
+  checkinSummary: string;
   onAction: () => void;
 }
 
-function HomeCheckinCard({ isCheckedIn, checkinTitleLines, onAction }: HomeCheckinCardProps) {
+function HomeCheckinCard({ isCheckedIn, checkinSummary, onAction }: HomeCheckinCardProps) {
   return (
     <section className="flex h-[158px] w-full flex-col gap-2 rounded-[10px] bg-main-800 px-6 py-4 text-card">
       <p
@@ -17,11 +17,7 @@ function HomeCheckinCard({ isCheckedIn, checkinTitleLines, onAction }: HomeCheck
 
       <h2 className="flex h-[61px] items-start pb-[11px] text-title-2 leading-[24px]">
         {isCheckedIn ? (
-          <>
-            {checkinTitleLines[0]}
-            <br />
-            {checkinTitleLines[1]}
-          </>
+          checkinSummary
         ) : (
           <>
             30초면
