@@ -4,6 +4,7 @@ import analysisFailedIcon from '../../assets/icons/analysis-failed.svg';
 import { Button } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
+import { useCheckinStore } from '../../stores/checkinStore';
 import { readImageFile } from '../../utils/imageFile';
 
 function CameraPermissionPage() {
@@ -19,6 +20,16 @@ function CameraPermissionPage() {
 
     const previewUrl = await readImageFile(file);
     setCapture(file, previewUrl);
+
+    if (location.state?.source === 'checkin') {
+      useCheckinStore.getState().completePhotoAnalysis();
+      navigate('/checkin', {
+        replace: true,
+        state: { source: 'checkin', imageSource: 'gallery' },
+      });
+      return;
+    }
+
     navigate('/analysis/loading', {
       replace: true,
       state: { ...location.state, imageSource: 'gallery' },

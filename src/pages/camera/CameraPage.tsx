@@ -6,6 +6,7 @@ import cameraShutterIcon from '../../assets/icons/camera-shutter.svg';
 import { BackButton } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
 import { useCameraCaptureStore } from '../../stores/cameraCaptureStore';
+import { useCheckinStore } from '../../stores/checkinStore';
 import { getFaceLandmarker } from './faceLandmarker';
 import { evaluateFacePosition } from './faceValidation';
 
@@ -64,6 +65,7 @@ function CameraPage() {
 
   const isFrontConditionMet = hasFace && isAligned && isFrontFacing;
   const conditionsMet = isFrontConditionMet && hasGoodLighting;
+  const isCheckinCapture = location.state?.source === 'checkin';
 
   const stopCamera = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -231,7 +233,15 @@ function CameraPage() {
       window.clearTimeout(navigationTimeoutRef.current);
     }
     navigationTimeoutRef.current = window.setTimeout(
-      () => navigate('/analysis/loading', { state: location.state }),
+      () => {
+        if (isCheckinCapture) {
+          useCheckinStore.getState().completePhotoAnalysis();
+          navigate('/checkin', { replace: true });
+          return;
+        }
+
+        navigate('/analysis/loading', { state: location.state });
+      },
       CAPTURE_PREVIEW_MS,
     );
   };
@@ -296,11 +306,11 @@ function CameraPage() {
 
       <header className="absolute inset-x-0 top-0 z-20 h-[calc(57px+env(safe-area-inset-top))] bg-text-primary">
         <BackButton
-          onClick={() => navigate('/onboarding?step=4')}
+          onClick={() => navigate(isCheckinCapture ? '/checkin' : '/onboarding?step=4')}
           iconSrc={cameraBackIcon}
           iconClassName="scale-x-[-1]"
           className="absolute left-[26.5px] top-[calc(9px+env(safe-area-inset-top))] h-9 w-6"
-          aria-label="온보딩 촬영 안내로 돌아가기"
+          aria-label={isCheckinCapture ? '체크인으로 돌아가기' : '온보딩 촬영 안내로 돌아가기'}
         />
         <div className="absolute left-1/2 top-[calc(16px+env(safe-area-inset-top))] flex -translate-x-1/2 gap-4">
           <span

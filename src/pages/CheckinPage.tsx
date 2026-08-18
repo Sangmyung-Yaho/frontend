@@ -1,12 +1,27 @@
-import { type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { createCheckin, getCheckinsByDateRange, getTodayCheckin } from '../api/checkins';
 import cameraIcon from '../assets/icons/camera.svg';
 import { Button, Input, NumberOption } from '../components/common';
 import { BackHeader } from '../layouts';
+import { getPendingOnboardingSkinImageId } from '../services/pendingOnboardingSkinImage';
 import { useCheckinStore } from '../stores/checkinStore';
+
+const CHECKIN_HISTORY_START_DATE = '2000-01-01';
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function CheckinPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const isStartingAnalysisRef = useRef(false);
   const sleepHours = useCheckinStore((state) => state.sleepHours);
   const stress = useCheckinStore((state) => state.stress);
   const water = useCheckinStore((state) => state.water);
@@ -15,13 +30,77 @@ function CheckinPage() {
   const setStress = useCheckinStore((state) => state.setStress);
   const setWater = useCheckinStore((state) => state.setWater);
   const startPhotoAnalysis = useCheckinStore((state) => state.startPhotoAnalysis);
+  const resetCheckin = useCheckinStore((state) => state.reset);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const { data: todayCheckin } = useQuery({
+    queryKey: ['today-checkin'],
+    queryFn: getTodayCheckin,
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const today = formatLocalDate(new Date());
+  const { data: checkinHistory } = useQuery({
+    queryKey: ['checkins', 'history', CHECKIN_HISTORY_START_DATE, today],
+    queryFn: () => getCheckinsByDateRange(CHECKIN_HISTORY_START_DATE, today),
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const isFirstCheckin = checkinHistory?.length === 0;
+  const pendingOnboardingSkinImageId = getPendingOnboardingSkinImageId();
+  const hasReusableOnboardingPhoto = isFirstCheckin && pendingOnboardingSkinImageId !== null;
+  const isPhotoReady = isPhotoComplete || hasReusableOnboardingPhoto;
 
-  const canAnalyze = stress !== null && water.trim().length > 0 && isPhotoComplete;
+  const waterIntake = Number(water);
+  const canAnalyze =
+    stress !== null &&
+    water.trim().length > 0 &&
+    Number.isInteger(waterIntake) &&
+    waterIntake >= 0 &&
+    isPhotoReady;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (todayCheckin && !isStartingAnalysisRef.current) {
+      resetCheckin();
+      navigate('/home', { replace: true });
+    }
+  }, [navigate, resetCheckin, todayCheckin]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canAnalyze) return;
-    navigate('/home?state=completed');
+    if (!canAnalyze || stress === null || isSubmitting) return;
+
+    setSubmitError('');
+    setIsSubmitting(true);
+    isStartingAnalysisRef.current = true;
+
+    try {
+      await createCheckin({
+        sleep_hours: sleepHours,
+        stress_level: stress,
+        water_intake_ml: waterIntake,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['home-dashboard'], refetchType: 'none' }),
+        queryClient.invalidateQueries({ queryKey: ['checkins'], refetchType: 'none' }),
+        queryClient.invalidateQueries({ queryKey: ['today-routine'], refetchType: 'none' }),
+      ]);
+
+      navigate('/analysis/loading', {
+        replace: true,
+        state: {
+          source: 'checkin',
+          imageSource: location.state?.imageSource,
+          usePendingOnboardingImage: hasReusableOnboardingPhoto && !isPhotoComplete,
+        },
+      });
+    } catch {
+      isStartingAnalysisRef.current = false;
+      setSubmitError('체크인을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,7 +136,9 @@ function CheckinPage() {
         </section>
 
         <fieldset>
-          <legend className="mb-3 text-caption-3 leading-normal text-text-primary">오늘 스트레스</legend>
+          <legend className="mb-3 text-caption-3 leading-normal text-text-primary">
+            오늘 스트레스
+          </legend>
           <div className="grid grid-cols-5 gap-3">
             {[1, 2, 3, 4, 5].map((value) => (
               <NumberOption
@@ -96,35 +177,43 @@ function CheckinPage() {
               navigate('/camera', { state: { source: 'checkin' } });
             }}
             className={`flex flex-col items-start gap-[10px] rounded-[10px] border px-6 py-3 text-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500 ${
-              isPhotoComplete
+              isPhotoReady
                 ? 'border-main-500 bg-main-50 text-main-500'
                 : 'border-gray-100 bg-card text-text-primary hover:bg-gray-50'
             }`}
           >
             <span className="flex items-center gap-2">
-              {isPhotoComplete ? (
+              {isPhotoReady ? (
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 24 24"
                   className="size-6 shrink-0 fill-none stroke-current"
                 >
-                  <path d="m5 12 4 4L19 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="m5 12 4 4L19 6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               ) : (
                 <img src={cameraIcon} alt="" aria-hidden="true" className="size-6 shrink-0" />
               )}
-              <span>{isPhotoComplete ? '촬영완료' : '촬영하기'}</span>
+              <span>{isPhotoReady ? '촬영완료' : '촬영하기'}</span>
             </span>
           </button>
         </section>
 
-        <Button
-          type="submit"
-          disabled={!canAnalyze}
-          className="fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-20 w-[calc(100%-32px)] max-w-[361px] -translate-x-1/2"
-        >
-          분석하기
-        </Button>
+        <div className="fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-20 w-[calc(100%-32px)] max-w-[361px] -translate-x-1/2">
+          {submitError && (
+            <p role="alert" className="mb-2 text-center text-caption text-danger">
+              {submitError}
+            </p>
+          )}
+          <Button type="submit" disabled={!canAnalyze || isSubmitting} className="w-full">
+            {isSubmitting ? '저장 중...' : '분석하기'}
+          </Button>
+        </div>
       </form>
     </main>
   );

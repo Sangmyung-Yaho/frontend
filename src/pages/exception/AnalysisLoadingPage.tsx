@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingIndicator } from '../../components/common';
 import { THEME_COLORS, useThemeColor } from '../../hooks/useThemeColor';
-import { setPendingOnboardingSkinImageId } from '../../services/pendingOnboardingSkinImage';
+import {
+  clearPendingOnboardingSkinImageId,
+  getPendingOnboardingSkinImageId,
+  setPendingOnboardingSkinImageId,
+} from '../../services/pendingOnboardingSkinImage';
 import {
   ANALYSIS_ESTIMATED_DURATION_MS,
+  analyzeUploadedSkinImage,
   analyzeSkinPhoto,
   uploadSkinPhoto,
 } from '../../services/skinAnalysis';
@@ -18,6 +24,7 @@ function AnalysisLoadingPage() {
   useThemeColor(THEME_COLORS.onboarding);
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const imageBlob = useCameraCaptureStore((state) => state.imageBlob);
   const setAnalysisResult = useCameraCaptureStore((state) => state.setAnalysisResult);
@@ -48,7 +55,22 @@ function AnalysisLoadingPage() {
 
     const processSkinPhoto = async () => {
       if (isCheckinPhotoAnalysis) {
-        const analysisResult = await analyzeSkinPhoto(imageBlob);
+        const usePendingOnboardingImage = location.state?.usePendingOnboardingImage === true;
+        const pendingSkinImageId = usePendingOnboardingImage
+          ? getPendingOnboardingSkinImageId()
+          : null;
+
+        if (usePendingOnboardingImage && pendingSkinImageId === null) {
+          throw new Error('저장된 온보딩 피부 이미지가 없습니다.');
+        }
+
+        const analysisResult = pendingSkinImageId
+          ? await analyzeUploadedSkinImage(pendingSkinImageId)
+          : await analyzeSkinPhoto(imageBlob);
+
+        if (pendingSkinImageId) {
+          clearPendingOnboardingSkinImageId();
+        }
         setAnalysisResult(analysisResult);
         useCheckinStore.getState().completePhotoAnalysis();
         return;
@@ -59,14 +81,23 @@ function AnalysisLoadingPage() {
     };
 
     void processSkinPhoto()
-      .then(() => {
+      .then(async () => {
         if (cancelled) return;
 
         window.cancelAnimationFrame(animationFrameId);
         setProgress(100);
+        if (isCheckinPhotoAnalysis) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['home-dashboard'] }),
+            queryClient.invalidateQueries({ queryKey: ['today-checkin'] }),
+            queryClient.invalidateQueries({ queryKey: ['checkins'] }),
+            queryClient.invalidateQueries({ queryKey: ['today-routine'] }),
+          ]);
+          useCheckinStore.getState().reset();
+        }
         navigationTimeoutId = window.setTimeout(
           () =>
-            navigate(isCheckinPhotoAnalysis ? '/checkin' : '/onboarding?step=5', {
+            navigate(isCheckinPhotoAnalysis ? '/home' : '/onboarding?step=5', {
               replace: true,
             }),
           COMPLETION_DISPLAY_MS,
@@ -78,6 +109,10 @@ function AnalysisLoadingPage() {
         window.cancelAnimationFrame(animationFrameId);
         navigate(isGalleryUpload ? '/analysis/gallery-failure' : '/analysis/failure', {
           replace: true,
+          state: {
+            source: isCheckinPhotoAnalysis ? 'checkin' : location.state?.source,
+            imageSource: location.state?.imageSource,
+          },
         });
       });
 
@@ -86,7 +121,15 @@ function AnalysisLoadingPage() {
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(navigationTimeoutId);
     };
-  }, [imageBlob, isCheckinPhotoAnalysis, isGalleryUpload, navigate, setAnalysisResult]);
+  }, [
+    imageBlob,
+    isCheckinPhotoAnalysis,
+    isGalleryUpload,
+    location.state,
+    navigate,
+    queryClient,
+    setAnalysisResult,
+  ]);
 
   return (
     <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">
