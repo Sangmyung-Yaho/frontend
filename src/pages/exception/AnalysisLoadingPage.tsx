@@ -132,7 +132,7 @@ function AnalysisLoadingPage() {
   ]);
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">
+    <main className="relative -mx-4 h-dvh w-[calc(100%+2rem)] overflow-hidden bg-[linear-gradient(180deg,var(--color-main-100)_0%,var(--color-background)_47.596%,var(--color-background)_100%)]">
       <section className="absolute left-1/2 top-1/2 flex w-[210px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-8">
         <LoadingIndicator label={isCheckinPhotoAnalysis ? '피부 분석 중' : '사진 업로드 중'} />
         <div className="flex h-11 w-full flex-col items-center gap-4">
