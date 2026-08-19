@@ -227,10 +227,8 @@ function OnboardingPage() {
 
     try {
       if (step === 1) {
-        await Promise.all([
-          saveRequiredAgreements(agreements.terms, agreements.privacy),
-          updateMarketingAgreement(agreements.marketing),
-        ]);
+        await saveRequiredAgreements(agreements.terms, agreements.privacy);
+        await updateMarketingAgreement(agreements.marketing);
       }
 
       if (step === 2) {
