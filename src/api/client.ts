@@ -2,7 +2,9 @@ import axios from 'axios';
 import { clearAuthTokens, getAccessToken } from './auth';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.PROD ? '/' : import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.PROD
+    ? 'https://api.barocare.cloud'
+    : import.meta.env.VITE_API_BASE_URL,
   timeout: 10_000,
   headers: {
     'Content-Type': 'application/json',
