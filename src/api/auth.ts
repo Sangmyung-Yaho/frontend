@@ -39,11 +39,24 @@ function getGoogleOAuthUrl() {
   return googleOAuthUrl;
 }
 
-export function startOAuthLogin(provider: OAuthProvider) {
-  if (provider === 'google') {
-    window.location.assign(getGoogleOAuthUrl());
-    return;
+function addLocalRedirectTo(oauthUrl: string) {
+  const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+  if (!isLocalhost) {
+    return oauthUrl;
   }
 
-  window.location.assign(`${getApiBaseUrl()}/api/v1/auth/oauth/${provider}`);
+  const url = new URL(oauthUrl, window.location.origin);
+  url.searchParams.set('redirect_to', `${window.location.origin}/oauth/success`);
+
+  return url.toString();
+}
+
+export function startOAuthLogin(provider: OAuthProvider) {
+  const oauthUrl =
+    provider === 'google'
+      ? getGoogleOAuthUrl()
+      : `${getApiBaseUrl()}/api/v1/auth/oauth/${provider}`;
+
+  window.location.assign(addLocalRedirectTo(oauthUrl));
 }
