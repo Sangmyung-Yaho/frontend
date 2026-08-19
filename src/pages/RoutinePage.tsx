@@ -27,10 +27,7 @@ function RoutinePage() {
     retry: 1,
     refetchInterval: (query) => {
       const routine = query.state.data;
-      return routine?.is_generating ||
-        (routine?.is_checkin_completed && routine.routines.length === 0)
-        ? 2_000
-        : false;
+      return routine?.is_generating ? 2_000 : false;
     },
   });
   const checkMutation = useMutation({
@@ -108,9 +105,11 @@ function RoutinePage() {
   };
 
   const isEmpty = todayRoutine && !todayRoutine.is_checkin_completed;
-  const isGenerating =
+  const isGenerating = todayRoutine?.is_checkin_completed && todayRoutine.is_generating;
+  const isUnavailable =
     todayRoutine?.is_checkin_completed &&
-    (todayRoutine.is_generating || todayRoutine.routines.length === 0);
+    !todayRoutine.is_generating &&
+    todayRoutine.routines.length === 0;
 
   return (
     <main
@@ -137,6 +136,13 @@ function RoutinePage() {
           title="오늘의 루틴을 만들고 있어요."
           description="잠시 후 다시 확인해주세요."
         />
+      ) : isUnavailable ? (
+        <StatusSection
+          title="오늘의 루틴을 만들지 못했어요."
+          description="피부 분석을 완료한 뒤 다시 확인해주세요."
+        >
+          <Button onClick={() => void refetch()}>다시 확인하기</Button>
+        </StatusSection>
       ) : todayRoutine ? (
         <div className="mx-4 flex w-[calc(100%-32px)] flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]">
           <RoutineProgressCard

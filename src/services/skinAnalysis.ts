@@ -4,6 +4,7 @@ import {
   type SkinImageResponse,
   type SkinAnalysisResponse,
 } from '../api/skinAnalysis';
+import { prepareImageForUpload } from '../utils/imageFile';
 
 export const ANALYSIS_ESTIMATED_DURATION_MS = 15_000;
 
@@ -19,10 +20,12 @@ export function uploadSkinPhoto(imageBlob: Blob | null) {
   const pendingRequest = pendingUploadRequests.get(imageBlob);
   if (pendingRequest) return pendingRequest;
 
-  const request = uploadSkinImage(imageBlob).catch((error: unknown) => {
-    pendingUploadRequests.delete(imageBlob);
-    throw error;
-  });
+  const request = prepareImageForUpload(imageBlob)
+    .then((preparedImage) => uploadSkinImage(preparedImage))
+    .catch((error: unknown) => {
+      pendingUploadRequests.delete(imageBlob);
+      throw error;
+    });
 
   pendingUploadRequests.set(imageBlob, request);
   return request;
