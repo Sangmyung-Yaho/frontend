@@ -6,8 +6,7 @@ import {
   type RoutineItem,
   type TodayRoutineData,
 } from '../api/routines';
-import routineEmptyIcon from '../assets/icons/routine-empty.svg';
-import { Button } from '../components/common';
+import { Button, CheckinEmptyState } from '../components/common';
 import { RoutineChecklist, RoutineProgressCard } from '../components/routine';
 import { BackHeader, BottomNavigation, type NavigationItem } from '../layouts';
 
@@ -114,7 +113,11 @@ function RoutinePage() {
     (todayRoutine.is_generating || todayRoutine.routines.length === 0);
 
   return (
-    <main className="relative min-h-dvh w-full overflow-x-hidden bg-background text-text-primary">
+    <main
+      className={`relative w-full overflow-x-hidden bg-background text-text-primary ${
+        isEmpty ? 'h-dvh overflow-y-hidden overscroll-none' : 'min-h-dvh'
+      }`}
+    >
       <div className="h-[env(safe-area-inset-top)]" aria-hidden="true" />
       <BackHeader title="오늘의 루틴" onBack={() => navigate(-1)} className="!pl-4" />
 
@@ -125,13 +128,10 @@ function RoutinePage() {
           <Button onClick={() => void refetch()}>다시 시도</Button>
         </StatusSection>
       ) : isEmpty ? (
-        <StatusSection
-          icon={routineEmptyIcon}
-          title="체크인 기록이 없어요."
+        <CheckinEmptyState
           description="오늘 체크인하면 맞춤 미션을 받을 수 있어요."
-        >
-          <Button onClick={() => navigate('/checkin')}>체크인 하러가기</Button>
-        </StatusSection>
+          onCheckin={() => navigate('/checkin')}
+        />
       ) : isGenerating ? (
         <StatusSection
           title="오늘의 루틴을 만들고 있어요."
@@ -168,21 +168,15 @@ function RoutinePage() {
 }
 
 interface StatusSectionProps {
-  icon?: string;
   title: string;
   description?: string;
   children?: React.ReactNode;
 }
 
-function StatusSection({ icon, title, description, children }: StatusSectionProps) {
+function StatusSection({ title, description, children }: StatusSectionProps) {
   return (
     <section className="absolute left-1/2 top-1/2 flex w-[368px] max-w-[calc(100%-25px)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-6">
       <div className="flex w-full flex-col items-center">
-        {icon && (
-          <div className="flex size-[88px] items-center justify-center rounded-full bg-main-50">
-            <img src={icon} alt="" className="size-[50px]" />
-          </div>
-        )}
         <div className="flex flex-col items-center gap-2 pt-4 text-center">
           <h2 className="text-title-3 text-text-analysis">{title}</h2>
           {description && <p className="text-body-small text-text-analysis-muted">{description}</p>}

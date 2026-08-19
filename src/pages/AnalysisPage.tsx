@@ -4,11 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { getReports, type ReportListItem, type SkinLevel } from '../api/reports';
 import { getSkinAnalysisHistory } from '../api/skinAnalysis';
 import calendarIcon from '../assets/icons/calender.svg';
-import emptyAnalysisIcon from '../assets/icons/emptyAnalysisIcon.svg';
 import statusCircleIcon from '../assets/icons/status-circle.svg';
 import { AnalysisSummaryCard, CalendarModal } from '../components/analysis';
-import { Button, StatusBadge } from '../components/common';
-import { BottomNavigation, type NavigationItem } from '../layouts';
+import { Button, CheckinEmptyState, StatusBadge } from '../components/common';
+import { BackHeader, BottomNavigation, type NavigationItem } from '../layouts';
 
 const levelLabel: Record<SkinLevel, string> = {
   SAFE: '낮음',
@@ -80,9 +79,14 @@ function AnalysisPage() {
   const isPending = reportsQuery.isPending || historyQuery.isPending;
   const isError = reportsQuery.isError || historyQuery.isError;
   const reports = reportsQuery.data ?? [];
+  const isEmpty = !isPending && !isError && reports.length === 0;
 
   return (
-    <main className="relative flex min-h-dvh flex-col bg-background">
+    <main
+      className={`relative flex flex-col bg-background ${
+        isEmpty ? 'h-dvh overflow-hidden overscroll-none' : 'min-h-dvh'
+      }`}
+    >
       {isPending ? (
         <CenteredMessage message="분석 기록을 불러오고 있어요." />
       ) : isError ? (
@@ -96,8 +100,15 @@ function AnalysisPage() {
             다시 시도
           </Button>
         </CenteredMessage>
-      ) : reports.length === 0 ? (
-        <EmptyAnalysis onCheckin={() => navigate('/checkin')} />
+      ) : isEmpty ? (
+        <>
+          <div className="h-[env(safe-area-inset-top)]" aria-hidden="true" />
+          <BackHeader title="피부 분석" onBack={() => navigate(-1)} className="!pl-4" />
+          <CheckinEmptyState
+            description="체크인을 하면 리포트가 여기에 쌓여요."
+            onCheckin={() => navigate('/checkin')}
+          />
+        </>
       ) : (
         <AnalysisReport reports={reports} history={historyQuery.data?.history ?? []} />
       )}
@@ -108,27 +119,6 @@ function AnalysisPage() {
         className="fixed bottom-0 left-1/2 z-20 h-[calc(62px+env(safe-area-inset-bottom))] -translate-x-1/2 pb-[calc(8px+env(safe-area-inset-bottom))]"
       />
     </main>
-  );
-}
-
-function EmptyAnalysis({ onCheckin }: { onCheckin: () => void }) {
-  return (
-    <section className="flex flex-1 flex-col items-center justify-center pb-[calc(62px+env(safe-area-inset-bottom))] pt-[10px]">
-      <div className="flex w-full -translate-y-5 flex-col items-center">
-        <div className="mb-5 flex size-[88px] shrink-0 items-center justify-center rounded-[999px] bg-main-50">
-          <img src={emptyAnalysisIcon} alt="" className="shrink-0" />
-        </div>
-        <h1 className="text-body-small font-semibold leading-5 text-text-primary">
-          체크인 기록이 없어요.
-        </h1>
-        <p className="mt-1 text-caption leading-4 text-text-secondary">
-          체크인을 하면 리포트가 여기에 쌓여요.
-        </p>
-        <Button className="mt-6 !h-[42px] text-body-small font-medium" onClick={onCheckin}>
-          체크인 하러가기
-        </Button>
-      </div>
-    </section>
   );
 }
 

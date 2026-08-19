@@ -13,4 +13,6 @@ export type { LogoCardProps } from './LogoCard';
 export { default as Input } from './Input';
 export { default as NumberOption } from './NumberOption';
 export { default as LoadingIndicator } from './LoadingIndicator';
+export { default as CheckinEmptyState } from './CheckinEmptyState';
+export type { CheckinEmptyStateProps } from './CheckinEmptyState';
 export * from './badge';
