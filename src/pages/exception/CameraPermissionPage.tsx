@@ -22,6 +22,14 @@ function CameraPermissionPage() {
     setCapture(file, previewUrl);
 
     if (location.state?.source === 'checkin') {
+      if (location.state?.resumeExistingCheckin === true) {
+        navigate('/analysis/loading', {
+          replace: true,
+          state: { ...location.state, source: 'checkin', imageSource: 'gallery' },
+        });
+        return;
+      }
+
       useCheckinStore.getState().completePhotoAnalysis();
       navigate('/checkin', {
         replace: true,

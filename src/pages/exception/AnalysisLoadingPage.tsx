@@ -92,6 +92,8 @@ function AnalysisLoadingPage() {
             queryClient.invalidateQueries({ queryKey: ['today-checkin'] }),
             queryClient.invalidateQueries({ queryKey: ['checkins'] }),
             queryClient.invalidateQueries({ queryKey: ['today-routine'] }),
+            queryClient.invalidateQueries({ queryKey: ['reports'] }),
+            queryClient.invalidateQueries({ queryKey: ['skin-analysis-history'] }),
           ]);
           useCheckinStore.getState().reset();
         }

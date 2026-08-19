@@ -141,7 +141,15 @@ function RoutinePage() {
           title="오늘의 루틴을 만들지 못했어요."
           description="피부 분석을 완료한 뒤 다시 확인해주세요."
         >
-          <Button onClick={() => void refetch()}>다시 확인하기</Button>
+          <Button
+            onClick={() =>
+              navigate('/camera', {
+                state: { source: 'checkin', resumeExistingCheckin: true },
+              })
+            }
+          >
+            분석 다시하기
+          </Button>
         </StatusSection>
       ) : todayRoutine ? (
         <div className="mx-4 flex w-[calc(100%-32px)] flex-col gap-6 pb-[calc(78px+env(safe-area-inset-bottom))]">

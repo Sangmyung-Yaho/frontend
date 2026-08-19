@@ -31,6 +31,13 @@ function formatToday(date: Date) {
   }).format(date);
 }
 
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const {
@@ -53,6 +60,13 @@ function HomePage() {
   const latestAnalysis = dashboard?.latest_skin_analysis ?? null;
   const todayRoutine = dashboard?.today_routine;
   const isTodayCheckedIn = todayRoutine?.is_checkin_completed ?? false;
+  const isTodayReportReady =
+    isTodayCheckedIn && dashboard?.latest_report?.report_date === formatDateKey(new Date());
+  const displayedWeeklyCheckinCount = Math.max(
+    0,
+    (dashboard?.weekly_checkins.checked_count ?? 0) -
+      (isTodayCheckedIn && !isTodayReportReady ? 1 : 0),
+  );
   const hasPreviousRecord = latestAnalysis !== null;
   const routines = (todayRoutine?.routines ?? []).slice(0, 2).map((routine) => ({
     title: routine.title,
@@ -77,6 +91,22 @@ function HomePage() {
       my: '/my',
     };
     navigate(routeByItem[item]);
+  };
+
+  const handleCheckinAction = () => {
+    if (isTodayReportReady) {
+      navigate('/analysis');
+      return;
+    }
+
+    if (isTodayCheckedIn) {
+      navigate('/camera', {
+        state: { source: 'checkin', resumeExistingCheckin: true },
+      });
+      return;
+    }
+
+    navigate('/checkin');
   };
 
   return (
@@ -123,12 +153,13 @@ function HomePage() {
         )}
         <HomeCheckinCard
           isCheckedIn={isTodayCheckedIn}
+          isReportReady={isTodayReportReady}
           checkinSummary={dashboard?.latest_report?.summary ?? '오늘 체크인을 완료했어요.'}
-          onAction={() => navigate(isTodayCheckedIn ? '/analysis' : '/checkin')}
+          onAction={handleCheckinAction}
         />
         <StreakCard
-          days={dashboard?.weekly_checkins.checked_count ?? 0}
-          hasRecord={(dashboard?.weekly_checkins.checked_count ?? 0) > 0}
+          days={displayedWeeklyCheckinCount}
+          hasRecord={displayedWeeklyCheckinCount > 0}
         />
         <SkinAnalysisSection
           hasRecord={hasPreviousRecord}
@@ -138,11 +169,16 @@ function HomePage() {
         />
         <RoutineCard
           isCheckedIn={isTodayCheckedIn}
+          isAnalysisComplete={isTodayReportReady}
           progress={todayRoutine?.today_progress_percent ?? 0}
           routines={routines}
-          onClick={() =>
-            navigate(isTodayCheckedIn ? '/mission?state=default' : '/mission?state=empty')
-          }
+          onClick={() => {
+            if (isTodayCheckedIn && !isTodayReportReady) {
+              handleCheckinAction();
+              return;
+            }
+            navigate(isTodayCheckedIn ? '/mission?state=default' : '/mission?state=empty');
+          }}
         />
       </div>
 

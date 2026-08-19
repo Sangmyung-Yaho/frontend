@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getReports, type ReportListItem, type SkinLevel } from '../api/reports';
+import { getTodayRoutines } from '../api/routines';
 import { getSkinAnalysisHistory } from '../api/skinAnalysis';
 import calendarIcon from '../assets/icons/calender.svg';
 import statusCircleIcon from '../assets/icons/status-circle.svg';
@@ -65,6 +66,12 @@ function AnalysisPage() {
     staleTime: 30_000,
     retry: 1,
   });
+  const todayRoutineQuery = useQuery({
+    queryKey: ['today-routine'],
+    queryFn: getTodayRoutines,
+    staleTime: 30_000,
+    retry: 1,
+  });
 
   const handleNavigation = (item: NavigationItem) => {
     const routeByItem: Record<NavigationItem, string> = {
@@ -76,10 +83,12 @@ function AnalysisPage() {
     navigate(routeByItem[item]);
   };
 
-  const isPending = reportsQuery.isPending || historyQuery.isPending;
+  const isPending =
+    reportsQuery.isPending || historyQuery.isPending || todayRoutineQuery.isPending;
   const isError = reportsQuery.isError || historyQuery.isError;
   const reports = reportsQuery.data ?? [];
   const isEmpty = !isPending && !isError && reports.length === 0;
+  const isAnalysisIncomplete = todayRoutineQuery.data?.is_checkin_completed === true && isEmpty;
 
   return (
     <main
@@ -105,8 +114,20 @@ function AnalysisPage() {
           <div className="h-[env(safe-area-inset-top)]" aria-hidden="true" />
           <BackHeader title="피부 분석" onBack={() => navigate(-1)} className="!pl-4" />
           <CheckinEmptyState
-            description="체크인을 하면 리포트가 여기에 쌓여요."
-            onCheckin={() => navigate('/checkin')}
+            title={isAnalysisIncomplete ? '피부 분석이 아직 완료되지 않았어요.' : '피부 분석 기록이 없어요.'}
+            description={
+              isAnalysisIncomplete
+                ? '사진을 다시 등록하면 분석을 이어갈 수 있어요.'
+                : '체크인을 하면 리포트가 여기에 쌓여요.'
+            }
+            actionLabel={isAnalysisIncomplete ? '분석 다시하기' : '체크인 하러가기'}
+            onCheckin={() =>
+              navigate(isAnalysisIncomplete ? '/camera' : '/checkin', {
+                state: isAnalysisIncomplete
+                  ? { source: 'checkin', resumeExistingCheckin: true }
+                  : undefined,
+              })
+            }
           />
         </>
       ) : (
