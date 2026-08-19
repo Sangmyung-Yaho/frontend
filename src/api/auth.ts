@@ -18,7 +18,7 @@ export function clearAuthTokens() {
 }
 
 function getApiBaseUrl() {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const apiBaseUrl = import.meta.env.PROD ? '/' : import.meta.env.VITE_API_BASE_URL;
 
   if (!apiBaseUrl) {
     throw new Error('VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.');
@@ -28,7 +28,9 @@ function getApiBaseUrl() {
 }
 
 function getGoogleOAuthUrl() {
-  const googleOAuthUrl = import.meta.env.VITE_GOOGLE_OAUTH_URL;
+  const googleOAuthUrl = import.meta.env.PROD
+    ? '/api/v1/auth/oauth/google'
+    : import.meta.env.VITE_GOOGLE_OAUTH_URL;
 
   if (!googleOAuthUrl) {
     throw new Error('VITE_GOOGLE_OAUTH_URL 환경변수가 설정되지 않았습니다.');
