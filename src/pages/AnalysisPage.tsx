@@ -202,9 +202,11 @@ function AnalysisReport({ reports, history }: AnalysisReportProps) {
             <button
               type="button"
               onClick={() => navigate(`/analysis/detail?reportId=${report.report_id}`)}
-              className="flex h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+              className="flex min-h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
             >
-              <span className="text-body-small font-semibold leading-5">{report.summary}</span>
+              <span className="min-w-0 text-body-small font-semibold leading-5">
+                {report.summary}
+              </span>
               <StatusBadge status={levelStatus[report.skin_level]} className="shrink-0" />
             </button>
           </li>
