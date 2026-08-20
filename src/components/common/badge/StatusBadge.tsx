@@ -23,7 +23,7 @@ function StatusBadge({ status = 'caution', className = '' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center justify-center gap-[10px] whitespace-nowrap rounded-xl border px-2 py-1 text-caption-2 ${statusClassName} ${className}`}
+      className={`inline-flex h-[27px] w-[43px] shrink-0 items-center justify-center gap-[10px] whitespace-nowrap rounded-xl border px-2 py-1 text-caption-3 ${statusClassName} ${className}`}
     >
       {label}
     </span>

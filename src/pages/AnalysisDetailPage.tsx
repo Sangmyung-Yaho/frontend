@@ -235,7 +235,9 @@ function ReportDetailContent({
               status: scoreStatus[report.skin_change.redness.current_score] ?? 'caution',
               description: signal?.redness.message ?? report.summary,
               factors: comparisonFactors,
-              footer: '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
+              footer: report.has_previous_analysis
+                ? undefined
+                : '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
             },
           },
           {
@@ -251,7 +253,9 @@ function ReportDetailContent({
               status: scoreStatus[report.skin_change.trouble.current_score] ?? 'caution',
               description: signal?.trouble.message ?? report.summary,
               factors: comparisonFactors,
-              footer: '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
+              footer: report.has_previous_analysis
+                ? undefined
+                : '다음 기록부터 오늘과 비교해서 변화를 알려드릴게요.',
             },
           },
         ]}

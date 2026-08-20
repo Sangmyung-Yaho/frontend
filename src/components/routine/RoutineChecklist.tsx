@@ -4,10 +4,9 @@ import type { RoutineItem } from '../../api/routines';
 interface RoutineChecklistProps {
   routines: RoutineItem[];
   onToggle: (routine: RoutineItem) => void;
-  disabledRoutineId?: number;
 }
 
-function RoutineChecklist({ routines, onToggle, disabledRoutineId }: RoutineChecklistProps) {
+function RoutineChecklist({ routines, onToggle }: RoutineChecklistProps) {
   return (
     <section className="flex w-full flex-col gap-4">
       <h2 className="text-title-2 text-text-primary">오늘 추천 루틴</h2>
@@ -23,7 +22,6 @@ function RoutineChecklist({ routines, onToggle, disabledRoutineId }: RoutineChec
               checked={routine.is_completed}
               onChange={() => onToggle(routine)}
               label={routine.title}
-              disabled={disabledRoutineId === routine.routine_id}
               className="w-full gap-[9px] [&>span:first-of-type]:size-5 [&>span:first-of-type]:border [&>span:last-child]:text-caption-3"
             />
           </div>

@@ -7,10 +7,9 @@ import {
   savePhotoGuideAgreement,
   saveRequiredAgreements,
   saveSkinCarePauseReason,
-  updateMarketingAgreement,
-  updateOnboardingProfile,
   type OnboardingSkinType,
 } from '../api/onboarding';
+import { updateMarketingAgreement, updateUserProfile } from '../api/users';
 import arrowLeftIcon from '../assets/icons/arrow-left.svg';
 import guideAccessoriesIcon from '../assets/onboarding/guide-accessories.svg';
 import guideFaceIcon from '../assets/onboarding/guide-face.svg';
@@ -172,10 +171,7 @@ function OnboardingPage() {
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      void updateOnboardingProfile(
-        { height: numericHeight, weight: numericWeight },
-        controller.signal,
-      )
+      void updateUserProfile({ height: numericHeight, weight: numericWeight }, controller.signal)
         .then(({ data }) => setWaterGoalMilliliters(data.data.water_goal_ml))
         .catch(() => undefined);
     }, 500);
@@ -232,7 +228,7 @@ function OnboardingPage() {
       }
 
       if (step === 2) {
-        const { data } = await updateOnboardingProfile({
+        const { data } = await updateUserProfile({
           height: numericHeight,
           weight: numericWeight,
         });
@@ -240,7 +236,7 @@ function OnboardingPage() {
       }
 
       if (step === 3 && skinType) {
-        await updateOnboardingProfile({ skin_type: skinTypeApiValues[skinType] });
+        await updateUserProfile({ skin_type: skinTypeApiValues[skinType] });
       }
 
       if (step === 4) {
@@ -349,12 +345,18 @@ function OnboardingPage() {
                   onClick={() => setOpenAgreementModal('privacy')}
                 />
               </div>
-              <Checkbox
-                checked={agreements.age}
-                onChange={() => toggleAgreement('age')}
-                className="w-full gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5 [&>span:last-child]:min-w-0 [&>span:last-child]:flex-1"
-                label={<AgreementLabel required>만 14세 이상</AgreementLabel>}
-              />
+              <div className="flex w-full items-center gap-4">
+                <Checkbox
+                  checked={agreements.age}
+                  onChange={() => toggleAgreement('age')}
+                  className="min-w-0 flex-1 gap-4 [&>span:first-of-type]:h-5 [&>span:first-of-type]:w-5"
+                  label={<AgreementLabel required>만 14세 이상</AgreementLabel>}
+                />
+                <AgreementDetailsButton
+                  label="만 14세 이상 확인"
+                  onClick={() => setOpenAgreementModal('age')}
+                />
+              </div>
               <div className="border-t border-gray-100 pt-4">
                 <div className="flex w-full items-center gap-4">
                   <Checkbox
@@ -595,7 +597,9 @@ function OnboardingPage() {
       {openAgreementModal === 'terms' && (
         <TermsAgreementModal onClose={() => setOpenAgreementModal(null)} />
       )}
-      {(openAgreementModal === 'privacy' || openAgreementModal === 'marketing') && (
+      {(openAgreementModal === 'privacy' ||
+        openAgreementModal === 'marketing' ||
+        openAgreementModal === 'age') && (
         <AdditionalAgreementModal
           kind={openAgreementModal}
           onClose={() => setOpenAgreementModal(null)}
