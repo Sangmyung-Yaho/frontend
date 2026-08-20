@@ -58,7 +58,9 @@ function ComparisonItem({
 
       {detail && isExpanded && (
         <div id={detailId} className="px-4 pb-4">
-          <p className="text-body-small leading-normal text-text-primary">{detail.description}</p>
+          <p className="whitespace-pre-line break-keep text-body-small leading-normal text-text-primary">
+            {detail.description}
+          </p>
 
           <ul className="mt-5 flex flex-col items-start gap-2">
             {detail.factors.map((factor) => {
@@ -76,7 +78,9 @@ function ComparisonItem({
           </ul>
 
           {detail.footer && (
-            <p className="mt-3 text-body-small leading-5 text-text-secondary">{detail.footer}</p>
+            <p className="mt-3 whitespace-pre-line break-keep text-body-small leading-5 text-text-secondary">
+              {detail.footer}
+            </p>
           )}
         </div>
       )}

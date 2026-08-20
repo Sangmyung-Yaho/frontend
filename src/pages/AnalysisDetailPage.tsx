@@ -206,7 +206,7 @@ function ReportDetailContent({
         factors={report.primary_causes.slice(0, 2).map((cause) => ({
           title: cause.name,
           value: String(cause.current_value),
-          unit: cause.unit,
+          unit: normalizeCauseUnit(cause.unit),
           description: cause.description,
         }))}
         interactionMessage={interactionMessage}
@@ -294,7 +294,12 @@ function ReportDetailContent({
 }
 
 function formatCauseMetric(cause: ReportPrimaryCause) {
-  return `${cause.name} ${cause.current_value}${cause.unit} · 기준 ${cause.baseline_value}${cause.unit}`;
+  const unit = normalizeCauseUnit(cause.unit);
+  return `${cause.name} ${cause.current_value}${unit} · 기준 ${cause.baseline_value}${unit}`;
+}
+
+function normalizeCauseUnit(unit: string) {
+  return unit.replace(/^[\d.,]+\s*/, '');
 }
 
 function mapSignalDirection(direction: SignalDirection | null): 'up' | 'down' | 'steady' {

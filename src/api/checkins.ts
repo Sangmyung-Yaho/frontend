@@ -21,23 +21,39 @@ interface ApiResponse<T> {
   data: T;
 }
 
+function unwrapApiResponse<T>(response: ApiResponse<T> | T): T {
+  if (typeof response === 'object' && response !== null && 'data' in response) {
+    return (response as ApiResponse<T>).data;
+  }
+
+  return response as T;
+}
+
 export async function createCheckin(checkin: CreateCheckinRequest) {
-  const { data } = await apiClient.post<ApiResponse<CheckinData>>('/api/v1/checkins', checkin);
-  return data.data;
+  const { data } = await apiClient.post<ApiResponse<CheckinData> | CheckinData>(
+    '/api/v1/checkins',
+    checkin,
+  );
+  return unwrapApiResponse(data);
 }
 
 export async function getCheckinsByDateRange(startDate: string, endDate: string) {
-  const { data } = await apiClient.get<ApiResponse<CheckinData[]>>('/api/v1/checkins', {
-    params: { startDate, endDate },
-  });
+  const { data } = await apiClient.get<ApiResponse<CheckinData[]> | CheckinData[]>(
+    '/api/v1/checkins',
+    {
+      params: { startDate, endDate },
+    },
+  );
 
-  return data.data;
+  return unwrapApiResponse(data);
 }
 
 export async function getTodayCheckin() {
   try {
-    const { data } = await apiClient.get<ApiResponse<CheckinData>>('/api/v1/checkins/today');
-    return data.data;
+    const { data } = await apiClient.get<ApiResponse<CheckinData> | CheckinData>(
+      '/api/v1/checkins/today',
+    );
+    return unwrapApiResponse(data);
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       return null;

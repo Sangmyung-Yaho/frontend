@@ -9,6 +9,7 @@ import statusCircleIcon from '../assets/icons/status-circle.svg';
 import { AnalysisSummaryCard, CalendarModal } from '../components/analysis';
 import { Button, CheckinEmptyState, StatusBadge } from '../components/common';
 import { BackHeader, BottomNavigation, type NavigationItem } from '../layouts';
+import { formatReportText } from '../utils/reportText';
 
 const levelLabel: Record<SkinLevel, string> = {
   SAFE: '낮음',
@@ -98,8 +99,7 @@ function AnalysisPage() {
     navigate(routeByItem[item]);
   };
 
-  const isPending =
-    reportsQuery.isPending || historyQuery.isPending || todayRoutineQuery.isPending;
+  const isPending = reportsQuery.isPending || historyQuery.isPending || todayRoutineQuery.isPending;
   const isError = reportsQuery.isError || historyQuery.isError;
   const reports = getLatestReportPerDate(reportsQuery.data ?? []);
   const isEmpty = !isPending && !isError && reports.length === 0;
@@ -129,7 +129,11 @@ function AnalysisPage() {
           <div className="h-[env(safe-area-inset-top)]" aria-hidden="true" />
           <BackHeader title="피부 분석" onBack={() => navigate(-1)} className="!pl-4" />
           <CheckinEmptyState
-            title={isAnalysisIncomplete ? '피부 분석이 아직 완료되지 않았어요.' : '피부 분석 기록이 없어요.'}
+            title={
+              isAnalysisIncomplete
+                ? '피부 분석이 아직 완료되지 않았어요.'
+                : '피부 분석 기록이 없어요.'
+            }
             description={
               isAnalysisIncomplete
                 ? '사진을 다시 등록하면 분석을 이어갈 수 있어요.'
@@ -230,8 +234,8 @@ function AnalysisReport({ reports, history }: AnalysisReportProps) {
               onClick={() => navigate(`/analysis/detail?reportId=${report.report_id}`)}
               className="flex min-h-[62px] flex-1 items-center justify-between gap-3 rounded-[10px] border border-gray-50 bg-card px-4 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
             >
-              <span className="min-w-0 text-body-small font-semibold leading-5">
-                {report.summary}
+              <span className="min-w-0 whitespace-pre-line break-keep text-body-small font-semibold leading-5">
+                {formatReportText(report.summary)}
               </span>
               <StatusBadge status={levelStatus[report.skin_level]} className="shrink-0" />
             </button>

@@ -1,3 +1,5 @@
+import { formatReportText } from '../../utils/reportText';
+
 interface HomeCheckinCardProps {
   isCheckedIn: boolean;
   isReportReady: boolean;
@@ -27,9 +29,9 @@ function HomeCheckinCard({
             : '아직 오늘 체크인 전이에요.'}
       </p>
 
-      <h2 className="flex min-h-[72px] items-start text-[19px] font-semibold leading-[23px]">
+      <h2 className="flex min-h-[72px] items-start whitespace-pre-line break-keep text-[17px] font-semibold leading-[23px]">
         {isReportReady ? (
-          checkinSummary
+          formatReportText(checkinSummary)
         ) : isAnalysisIncomplete ? (
           <>
             사진을 다시 등록하면
@@ -50,11 +52,7 @@ function HomeCheckinCard({
         onClick={onAction}
         className="flex h-[30px] w-full shrink-0 items-center justify-center rounded-[10px] bg-card text-caption-3 text-text-primary transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main-500"
       >
-        {isReportReady
-          ? '리포트 보기'
-          : isAnalysisIncomplete
-            ? '분석 다시하기'
-            : '체크인 시작하기'}
+        {isReportReady ? '리포트 보기' : isAnalysisIncomplete ? '분석 다시하기' : '체크인 시작하기'}
       </button>
     </section>
   );

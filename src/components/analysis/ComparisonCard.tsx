@@ -1,4 +1,5 @@
 import ComparisonItem, { type ComparisonDetail } from './ComparisonItem';
+import { formatReportText } from '../../utils/reportText';
 
 export interface ComparisonMetric {
   label: string;
@@ -25,8 +26,8 @@ function ComparisonCard({
     <section
       className={`overflow-hidden rounded-[10px] border border-main-500 bg-main-50 ${className}`}
     >
-      <h2 className="bg-main-100 px-4 py-4 text-title-3 leading-normal text-text-primary">
-        {title}
+      <h2 className="whitespace-pre-line break-keep bg-main-100 px-4 py-4 text-title-3 leading-normal text-text-primary">
+        {formatReportText(title)}
       </h2>
 
       <div className="space-y-2 px-4 py-2">
