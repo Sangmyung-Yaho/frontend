@@ -33,6 +33,31 @@ export interface SkinComparisonResponse {
   compared_at: string | null;
 }
 
+export type RecommendationStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface RecommendedIngredient {
+  name: string;
+  reason: string;
+}
+
+export interface RecommendedProduct {
+  brand: string;
+  name: string;
+  matchedIngredient: string;
+  reason: string;
+  productUrl: string;
+}
+
+export interface IngredientRecommendationResponse {
+  status: RecommendationStatus;
+  ingredients: RecommendedIngredient[];
+}
+
+export interface ProductRecommendationResponse {
+  status: RecommendationStatus;
+  products: RecommendedProduct[];
+}
+
 export interface SkinAnalysisHistoryItem {
   date: string;
   redness_level: SkinAnalysisLevel;
@@ -100,6 +125,20 @@ export async function getSkinAnalysisDetail(skinAnalysisId: number) {
   const { data } = await apiClient.get<
     ApiResponse<SkinAnalysisDetailResponse> | SkinAnalysisDetailResponse
   >(`/api/v1/skin-analyses/${skinAnalysisId}`);
+  return unwrapApiResponse(data);
+}
+
+export async function getRecommendedIngredients(skinAnalysisId: number) {
+  const { data } = await apiClient.get<
+    ApiResponse<IngredientRecommendationResponse> | IngredientRecommendationResponse
+  >(`/api/v1/skin-analyses/${skinAnalysisId}/ingredients`);
+  return unwrapApiResponse(data);
+}
+
+export async function getRecommendedProducts(skinAnalysisId: number) {
+  const { data } = await apiClient.get<
+    ApiResponse<ProductRecommendationResponse> | ProductRecommendationResponse
+  >(`/api/v1/skin-analyses/${skinAnalysisId}/products`);
   return unwrapApiResponse(data);
 }
 

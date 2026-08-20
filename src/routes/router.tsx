@@ -14,6 +14,11 @@ import AnalysisDetailPage from '../pages/AnalysisDetailPage';
 import GalleryAnalysisFailurePage from '../pages/exception/GalleryAnalysisFailurePage';
 import RouteErrorPage from '../pages/exception/RouteErrorPage';
 import OAuthSuccessPage from '../pages/OAuthSuccessPage';
+import MyPage from '../pages/MyPage';
+import MyPoliciesPage from '../pages/MyPoliciesPage';
+import MyPolicyDetailPage from '../pages/MyPolicyDetailPage';
+import MyProfileEditPage from '../pages/MyProfileEditPage';
+import MyWithdrawalPage from '../pages/MyWithdrawalPage';
 import RequireAuth from './RequireAuth';
 
 export const router = createBrowserRouter([
@@ -47,6 +52,26 @@ export const router = createBrowserRouter([
           {
             path: '/mission',
             Component: RoutinePage,
+          },
+          {
+            path: '/my',
+            Component: MyPage,
+          },
+          {
+            path: '/my/profile',
+            Component: MyProfileEditPage,
+          },
+          {
+            path: '/my/policies',
+            Component: MyPoliciesPage,
+          },
+          {
+            path: '/my/policies/:policyType',
+            Component: MyPolicyDetailPage,
+          },
+          {
+            path: '/my/withdraw',
+            Component: MyWithdrawalPage,
           },
           {
             path: '/camera',

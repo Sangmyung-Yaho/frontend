@@ -52,19 +52,6 @@ export interface HomeDashboardData {
   };
 }
 
-export interface UserProfileData {
-  nickname: string;
-  height: number | null;
-  weight: number | null;
-  skin_type: string | null;
-  marketing_agreed: boolean;
-  water_goal_ml: number | null;
-}
-
 export function getHomeDashboard() {
   return apiClient.get<ApiResponse<HomeDashboardData>>('/api/v1/home');
-}
-
-export function getUserProfile() {
-  return apiClient.get<ApiResponse<UserProfileData>>('/api/v1/users/profile');
 }

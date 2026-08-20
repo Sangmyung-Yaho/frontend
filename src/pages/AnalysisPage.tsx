@@ -52,6 +52,21 @@ function formatSummaryDate(date: string) {
   return date === formatDateKey(new Date()) ? `오늘 · ${formatted}` : formatted;
 }
 
+function getLatestReportPerDate(reports: ReportListItem[]) {
+  const reportsByDate = new Map<string, ReportListItem>();
+
+  reports.forEach((report) => {
+    const existingReport = reportsByDate.get(report.report_date);
+    if (!existingReport || report.report_id > existingReport.report_id) {
+      reportsByDate.set(report.report_date, report);
+    }
+  });
+
+  return Array.from(reportsByDate.values()).sort((first, second) =>
+    second.report_date.localeCompare(first.report_date),
+  );
+}
+
 function AnalysisPage() {
   const navigate = useNavigate();
   const reportsQuery = useQuery({
@@ -86,7 +101,7 @@ function AnalysisPage() {
   const isPending =
     reportsQuery.isPending || historyQuery.isPending || todayRoutineQuery.isPending;
   const isError = reportsQuery.isError || historyQuery.isError;
-  const reports = reportsQuery.data ?? [];
+  const reports = getLatestReportPerDate(reportsQuery.data ?? []);
   const isEmpty = !isPending && !isError && reports.length === 0;
   const isAnalysisIncomplete = todayRoutineQuery.data?.is_checkin_completed === true && isEmpty;
 

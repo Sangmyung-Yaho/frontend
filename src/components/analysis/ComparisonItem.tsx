@@ -38,9 +38,7 @@ function ComparisonItem({
   };
 
   return (
-    <article
-      className={`w-full rounded-[10px] ${className}`}
-    >
+    <article className={`w-full rounded-[10px] ${className}`}>
       <button
         type="button"
         onClick={handleClick}

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getHomeDashboard, getUserProfile, type SkinGrade } from '../api/home';
+import { getHomeDashboard, type SkinGrade } from '../api/home';
+import { getUserProfile } from '../api/users';
 import wave1 from '../assets/home/wave-1.svg';
 import wave2 from '../assets/home/wave-2.svg';
 import wave3 from '../assets/home/wave-3.svg';
@@ -38,6 +39,15 @@ function formatDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function isTimestampOnLocalDate(timestamp: string, date: Date) {
+  const hasTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/.test(timestamp);
+  const parsedTimestamp = new Date(hasTimeZone ? timestamp : `${timestamp}Z`);
+  return (
+    !Number.isNaN(parsedTimestamp.getTime()) &&
+    formatDateKey(parsedTimestamp) === formatDateKey(date)
+  );
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const {
@@ -60,8 +70,13 @@ function HomePage() {
   const latestAnalysis = dashboard?.latest_skin_analysis ?? null;
   const todayRoutine = dashboard?.today_routine;
   const isTodayCheckedIn = todayRoutine?.is_checkin_completed ?? false;
+  const today = new Date();
+  const hasAnalysisCompletedToday =
+    latestAnalysis !== null && isTimestampOnLocalDate(latestAnalysis.analyzed_at, today);
   const isTodayReportReady =
-    isTodayCheckedIn && dashboard?.latest_report?.report_date === formatDateKey(new Date());
+    isTodayCheckedIn &&
+    dashboard?.latest_report !== null &&
+    (dashboard?.latest_report?.report_date === formatDateKey(today) || hasAnalysisCompletedToday);
   const displayedWeeklyCheckinCount = Math.max(
     0,
     (dashboard?.weekly_checkins.checked_count ?? 0) -
