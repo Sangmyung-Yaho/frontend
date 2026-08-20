@@ -16,7 +16,7 @@ function HomeCheckinCard({
   const isAnalysisIncomplete = isCheckedIn && !isReportReady;
 
   return (
-    <section className="flex min-h-[178px] w-full flex-col gap-2 rounded-[10px] bg-main-800 px-6 py-4 text-card">
+    <section className="flex min-h-[178px] w-full flex-col gap-2 rounded-[10px] bg-main-700 px-6 py-4 text-card">
       <p
         className={`flex h-[19px] items-center text-caption-2 leading-[normal] ${
           isCheckedIn ? 'text-card' : 'text-main-100'
