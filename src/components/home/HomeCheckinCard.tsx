@@ -29,7 +29,7 @@ function HomeCheckinCard({
             : '아직 오늘 체크인 전이에요.'}
       </p>
 
-      <h2 className="flex min-h-[72px] items-start whitespace-pre-line break-keep text-[17px] font-semibold leading-[23px]">
+      <h2 className="-mx-1 flex min-h-[72px] items-start whitespace-pre-line break-keep text-[17px] font-semibold leading-[23px]">
         {isReportReady ? (
           formatReportText(checkinSummary)
         ) : isAnalysisIncomplete ? (
