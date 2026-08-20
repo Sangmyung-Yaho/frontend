@@ -38,10 +38,6 @@ export function updateUserProfile(profile: UpdateUserProfileRequest, signal?: Ab
   });
 }
 
-export function getMarketingAgreement() {
-  return apiClient.get<ApiResponse<{ marketing_agreed: boolean }>>('/api/v1/users/me/agreements');
-}
-
 export function updateMarketingAgreement(marketingAgreed: boolean) {
   return apiClient.patch('/api/v1/users/me/agreements', {
     marketing_agreed: marketingAgreed,

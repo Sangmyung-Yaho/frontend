@@ -91,13 +91,6 @@ export async function getReport(reportId: number) {
   return unwrapApiResponse(data);
 }
 
-export async function getLatestReport() {
-  const { data } = await apiClient.get<ApiResponse<ReportDetail> | ReportDetail>(
-    '/api/v1/reports/skin/latest',
-  );
-  return unwrapApiResponse(data);
-}
-
 export async function getLatestReportWarnings() {
   const { data } = await apiClient.get<ApiResponse<{ warnings: ReportWarning[] }>>(
     '/api/v1/reports/causes/latest/warnings',
