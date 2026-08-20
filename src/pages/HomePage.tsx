@@ -32,20 +32,8 @@ function formatToday(date: Date) {
   }).format(date);
 }
 
-function formatDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function isTimestampOnLocalDate(timestamp: string, date: Date) {
-  const hasTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/.test(timestamp);
-  const parsedTimestamp = new Date(hasTimeZone ? timestamp : `${timestamp}Z`);
-  return (
-    !Number.isNaN(parsedTimestamp.getTime()) &&
-    formatDateKey(parsedTimestamp) === formatDateKey(date)
-  );
+function getDateKeyFromTimestamp(timestamp: string) {
+  return timestamp.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
 }
 
 function HomePage() {
@@ -68,15 +56,17 @@ function HomePage() {
   });
 
   const latestAnalysis = dashboard?.latest_skin_analysis ?? null;
+  const latestReport = dashboard?.latest_report ?? null;
   const todayRoutine = dashboard?.today_routine;
   const isTodayCheckedIn = todayRoutine?.is_checkin_completed ?? false;
-  const today = new Date();
-  const hasAnalysisCompletedToday =
-    latestAnalysis !== null && isTimestampOnLocalDate(latestAnalysis.analyzed_at, today);
+  const latestAnalysisDate = latestAnalysis
+    ? getDateKeyFromTimestamp(latestAnalysis.analyzed_at)
+    : null;
   const isTodayReportReady =
     isTodayCheckedIn &&
-    dashboard?.latest_report !== null &&
-    (dashboard?.latest_report?.report_date === formatDateKey(today) || hasAnalysisCompletedToday);
+    latestReport !== null &&
+    latestAnalysisDate !== null &&
+    latestReport.report_date === latestAnalysisDate;
   const displayedWeeklyCheckinCount = Math.max(
     0,
     (dashboard?.weekly_checkins.checked_count ?? 0) -
@@ -169,7 +159,7 @@ function HomePage() {
         <HomeCheckinCard
           isCheckedIn={isTodayCheckedIn}
           isReportReady={isTodayReportReady}
-          checkinSummary={dashboard?.latest_report?.summary ?? '오늘 체크인을 완료했어요.'}
+          checkinSummary={latestReport?.summary ?? '오늘 체크인을 완료했어요.'}
           onAction={handleCheckinAction}
         />
         <StreakCard
