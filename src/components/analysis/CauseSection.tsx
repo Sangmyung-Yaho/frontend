@@ -1,4 +1,5 @@
 import { CauseBadge } from '../common';
+import { formatReportText } from '../../utils/reportText';
 import CauseCard, { type CauseCardProps } from './CauseCard';
 import RiskCard from './RiskCard';
 
@@ -37,7 +38,7 @@ function CauseSection({
             상호작용 설명
           </h2>
           <p className="mt-2 whitespace-pre-line break-keep text-body-small leading-5 text-text-secondary">
-            {interactionMessage}
+            {formatReportText(interactionMessage)}
           </p>
         </div>
       )}

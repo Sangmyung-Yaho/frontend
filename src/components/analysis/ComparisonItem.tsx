@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { formatReportText } from '../../utils/reportText';
 import { MetricBadge, StatusBadge, TrendBadge } from '../common';
 
 export interface ComparisonDetail {
@@ -59,7 +60,7 @@ function ComparisonItem({
       {detail && isExpanded && (
         <div id={detailId} className="px-4 pb-4">
           <p className="whitespace-pre-line break-keep text-body-small leading-normal text-text-primary">
-            {detail.description}
+            {formatReportText(detail.description)}
           </p>
 
           <ul className="mt-5 flex flex-col items-start gap-2">
@@ -79,7 +80,7 @@ function ComparisonItem({
 
           {detail.footer && (
             <p className="mt-3 whitespace-pre-line break-keep text-body-small leading-5 text-text-secondary">
-              {detail.footer}
+              {formatReportText(detail.footer)}
             </p>
           )}
         </div>

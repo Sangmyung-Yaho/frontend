@@ -1,3 +1,5 @@
+import { formatReportText } from '../../utils/reportText';
+
 export interface RiskCardProps {
   title?: string;
   description?: string;
@@ -20,11 +22,13 @@ function RiskCard({
       </span>
       <h2
         id="risk-card-title"
-        className="mt-[11px] text-title-2 font-bold leading-7 text-text-primary"
+        className="mt-[11px] whitespace-pre-line break-keep text-title-2 font-bold leading-7 text-text-primary"
       >
-        {title}
+        {formatReportText(title)}
       </h2>
-      <p className="mt-[11px] text-body-small leading-5 text-text-secondary">{description}</p>
+      <p className="mt-[11px] whitespace-pre-line break-keep text-body-small leading-5 text-text-secondary">
+        {formatReportText(description)}
+      </p>
     </section>
   );
 }

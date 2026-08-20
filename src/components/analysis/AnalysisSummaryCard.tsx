@@ -55,7 +55,7 @@ function AnalysisSummaryCard({
               )}
               {metric.label}
             </span>
-            <strong className="text-title-3">{metric.value}</strong>
+            <strong className="text-[16px] font-semibold leading-none">{metric.value}</strong>
           </div>
         ))}
       </div>

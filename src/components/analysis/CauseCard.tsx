@@ -1,3 +1,5 @@
+import { formatReportText } from '../../utils/reportText';
+
 export interface CauseCardProps {
   title: string;
   value: string;
@@ -26,7 +28,7 @@ function CauseCard({
         <span className="text-caption leading-none text-text-secondary">{unit}</span>
       </p>
       <p className="mt-2 whitespace-pre-line break-keep text-caption leading-4 text-text-secondary">
-        {description}
+        {formatReportText(description)}
       </p>
     </article>
   );
